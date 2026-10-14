@@ -1,0 +1,648 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here.
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
+
+    /* Brand Colors - Based on BahOfertas logo */
+    --primary: 0 85% 55%; /* Red from logo */
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 0 85% 65%;
+
+    --secondary: 210 10% 96%;
+    --secondary-foreground: 0 0% 15%;
+
+    --success: 146 64% 47%; /* Green for CTAs */
+    --success-foreground: 0 0% 98%;
+    --success-glow: 146 64% 57%;
+
+    --warning: 43 96% 56%; /* Yellow accent from logo */
+    --warning-foreground: 0 0% 15%;
+    --warning-glow: 43 96% 66%;
+
+    --muted: 210 10% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 146 64% 47%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 0 85% 55%;
+
+    --radius: 0.5rem;
+
+    /* Custom Design Tokens */
+    --gradient-primary: linear-gradient(135deg, hsl(0 85% 55%), hsl(0 85% 65%));
+    --gradient-success: linear-gradient(135deg, hsl(146 64% 47%), hsl(146 64% 57%));
+    --gradient-hero: linear-gradient(135deg, hsl(0 85% 55%), hsl(43 96% 56%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(210 10% 98%));
+
+    --shadow-card: 0 4px 12px hsl(0 0% 0% / 0.08);
+    --shadow-card-hover: 0 8px 24px hsl(0 0% 0% / 0.12);
+    --shadow-glow: 0 0 32px hsl(0 85% 55% / 0.25);
+    --shadow-success-glow: 0 0 20px hsl(146 64% 47% / 0.3);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 14% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 14% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 14% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 0 85% 60%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 0 85% 70%;
+
+    --secondary: 217 32% 18%;
+    --secondary-foreground: 210 40% 98%;
+
+    --success: 146 64% 50%;
+    --success-foreground: 0 0% 98%;
+    --success-glow: 146 64% 60%;
+
+    --warning: 43 96% 60%;
+    --warning-foreground: 0 0% 15%;
+    --warning-glow: 43 96% 70%;
+
+    --muted: 217 32% 18%;
+    --muted-foreground: 215 20% 65%;
+
+    --accent: 146 64% 50%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 217 32% 18%;
+    --input: 217 32% 18%;
+    --ring: 0 85% 60%;
+
+    --shadow-card: 0 4px 12px hsl(0 0% 0% / 0.25);
+    --shadow-card-hover: 0 8px 24px hsl(0 0% 0% / 0.35);
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overscroll-behavior-y: none;
+  }
+
+  /* Rolagem com inércia e sem "flash" de toque no mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  [data-scroll-x],
+  .overflow-x-auto,
+  .overflow-y-auto,
+  .overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Micro-interações fluidas em elementos interativos */
+  button,
+  a,
+  [role="button"] {
+    transition:
+      transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+      opacity 0.22s ease,
+      background-color 0.22s ease,
+      color 0.22s ease,
+      box-shadow 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  button:active,
+  [role="button"]:active {
+    transform: scale(0.97);
+  }
+
+  img {
+    content-visibility: auto;
+  }
+
+
+/* Skeleton shimmer animation */
+@keyframes skeleton-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* Modern loading pulse */
+@keyframes modern-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+.animate-modern-pulse {
+  animation: modern-pulse 1.5s ease-in-out infinite;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@layer utilities {
+  /* Interactive Hover Effects */
+  .hover-scale {
+    @apply transition-transform duration-200 ease-out hover:scale-105;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-300 ease-out hover:shadow-lg;
+  }
+
+  /* Smooth scrollbar like Airbnb */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 9999px;
+  }
+
+  .scrollbar-thin:hover::-webkit-scrollbar-thumb {
+    background-color: hsl(var(--muted-foreground) / 0.4);
+  }
+}
+
+@keyframes scanLine {
+  0%, 100% { top: 0.5rem; }
+  50% { top: calc(100% - 0.5rem); }
+}
+
+/* Reflexo tecnológico dos módulos de perguntas frequentes */
+.faq-tech-card {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    border-color 320ms ease,
+    box-shadow 320ms ease,
+    transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.faq-tech-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 25%,
+    hsl(var(--success) / 0.04) 39%,
+    hsl(var(--success-glow) / 0.2) 49%,
+    hsl(var(--success) / 0.06) 58%,
+    transparent 72%
+  );
+  transform: translateX(-115%);
+}
+
+.faq-tech-scan {
+  position: absolute;
+  inset-block: 0;
+  left: 0;
+  z-index: 2;
+  width: 2px;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    hsl(var(--success-glow)),
+    transparent
+  );
+  box-shadow: 0 0 14px hsl(var(--success) / 0.65);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .faq-tech-card:hover {
+    border-color: hsl(var(--success) / 0.65);
+    box-shadow: 0 8px 24px hsl(var(--success) / 0.14);
+    transform: translateY(-2px);
+  }
+
+  .faq-tech-card:hover::after {
+    opacity: 1;
+    animation: faq-mirror-sweep 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .faq-tech-card:hover .faq-tech-scan {
+    animation: faq-edge-pulse 900ms ease both;
+  }
+}
+
+@keyframes faq-mirror-sweep {
+  0% { transform: translateX(-115%); }
+  100% { transform: translateX(115%); }
+}
+
+@keyframes faq-edge-pulse {
+  0%, 100% { opacity: 0; transform: scaleY(0.35); }
+  40%, 65% { opacity: 1; transform: scaleY(0.82); }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .faq-tech-card::after {
+    animation: faq-mobile-sweep 8s ease-in-out infinite;
+  }
+
+  .faq-tech-card:nth-child(2)::after { animation-delay: 1.35s; }
+  .faq-tech-card:nth-child(3)::after { animation-delay: 2.7s; }
+  .faq-tech-card:nth-child(4)::after { animation-delay: 4.05s; }
+  .faq-tech-card:nth-child(5)::after { animation-delay: 5.4s; }
+  .faq-tech-card:nth-child(6)::after { animation-delay: 6.75s; }
+}
+
+@keyframes faq-mobile-sweep {
+  0%, 10% { opacity: 0; transform: translateX(-115%); }
+  16% { opacity: 1; }
+  30% { opacity: 1; transform: translateX(115%); }
+  36%, 100% { opacity: 0; transform: translateX(115%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .faq-tech-card,
+  .faq-tech-card::after,
+  .faq-tech-card .faq-tech-scan {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+}
+
+/* Mapbox popup overrides */
+.hotel-map-popup .mapboxgl-popup-content {
+  background: hsl(var(--card));
+  border-radius: 14px;
+  padding: 0;
+  box-shadow: 0 8px 24px hsl(0 0% 0% / 0.12);
+  border: 1px solid hsl(var(--border));
+  overflow: hidden;
+}
+.hotel-map-popup .mapboxgl-popup-tip {
+  border-top-color: hsl(var(--card));
+}
+.hotel-map-popup .mapboxgl-popup-close-button {
+  display: none;
+}
+.mapboxgl-ctrl-logo,
+.mapboxgl-ctrl-attrib {
+  display: none !important;
+}
+/* Compact auth form on mobile to fit viewport without scroll */
+@media (max-width: 767px) {
+  .auth-mobile-compact form > * + * { margin-top: 0.4rem !important; }
+  .auth-mobile-compact label { font-size: 0.7rem !important; line-height: 1rem !important; }
+  .auth-mobile-compact input { height: 2.1rem !important; font-size: 0.8rem !important; }
+  .auth-mobile-compact button[type="submit"] { height: 2.25rem !important; font-size: 0.8rem !important; }
+  .auth-mobile-compact .space-y-1 > * + *,
+  .auth-mobile-compact .space-y-1\.5 > * + * { margin-top: 0.15rem !important; }
+}
+
+/* Luz circulante em tempo real ao redor dos cards (tom vermelho Bah Ofertas) */
+.card-light-ring {
+  position: relative;
+  border-radius: 0.75rem;
+  padding: 2px;
+  overflow: hidden;
+  isolation: isolate;
+  box-shadow: 0 0 8px hsl(var(--primary) / 0.18);
+}
+.card-light-ring::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  aspect-ratio: 1 / 1;
+  translate: -50% -50%;
+  z-index: 0;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 282deg,
+    hsl(var(--primary) / 0.55) 315deg,
+    hsl(var(--primary-glow)) 335deg,
+    hsl(0 0% 100%) 346deg,
+    hsl(var(--primary)) 353deg,
+    transparent 360deg
+  );
+  animation: card-light-ring-spin 3.5s linear infinite;
+  /* Só anima quando o card está visível (marcado via IntersectionObserver) */
+  animation-play-state: paused;
+}
+.card-light-ring[data-ring-active="true"]::before {
+  animation-play-state: running;
+}
+.card-light-ring > .card-light-ring-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  border-radius: calc(0.75rem - 2px);
+  overflow: hidden;
+  background: hsl(var(--card));
+}
+@keyframes card-light-ring-spin {
+  to { rotate: 360deg; }
+}
+/* Em telas pequenas mantemos o contorno com animação mais leve (menos custo de GPU) */
+@media (max-width: 767px) {
+  .card-light-ring::before {
+    animation-duration: 5s;
+  }
+  .card-light-ring { box-shadow: 0 0 6px hsl(var(--primary) / 0.15); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card-light-ring::before { animation: none !important; }
+  .card-light-ring { box-shadow: none; }
+}
+
+/* Botões de link interno (Veja também): vermelho Bah Ofertas com varredura de espelho */
+.seo-link-chip {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  background: linear-gradient(180deg, hsl(var(--primary-glow)), hsl(var(--primary)));
+  color: hsl(var(--primary-foreground));
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  box-shadow: 0 2px 10px hsl(var(--primary) / 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.seo-link-chip:hover {
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 6px 16px hsl(var(--primary) / 0.45);
+}
+.seo-link-chip:active {
+  transform: translateY(0) scale(0.97);
+}
+.seo-link-chip::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  transform: translateX(-160%) skewX(-22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    hsl(var(--primary-foreground) / 0.45),
+    transparent
+  );
+  animation: seo-chip-shine 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes seo-chip-shine {
+  0% { transform: translateX(-160%) skewX(-22deg); }
+  55%, 100% { transform: translateX(320%) skewX(-22deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .seo-link-chip::after { animation: none; }
+}
+
+/* ============================================================
+   Seat map — assentos numerados (Nativitaten / Grande Desfile)
+   Cores funcionais seguindo a legenda oficial do Natal Luz:
+   livre = verde, selecionado = laranja, ocupado = roxo, bloqueado = preto.
+   ============================================================ */
+.seat-dot {
+  transition: fill 0.15s ease, stroke 0.15s ease;
+}
+.seat-free {
+  fill: #22c55e;
+  cursor: pointer;
+}
+.seat-free:hover {
+  fill: #4ade80;
+  stroke: #ffffff;
+  stroke-width: 0.12;
+}
+.seat-selected {
+  fill: #f97316;
+  stroke: #ffffff;
+  stroke-width: 0.14;
+  cursor: pointer;
+}
+.seat-occupied {
+  fill: #7c3aed;
+  cursor: not-allowed;
+}
+.seat-blocked {
+  fill: #1f2937;
+  cursor: not-allowed;
+}
+.seat-label {
+  fill: #ffffff;
+  font-weight: 700;
+  pointer-events: none;
+  user-select: none;
+}
+.seat-free:hover + .seat-label,
+.seat-selected + .seat-label {
+  fill: #0f172a;
+}
+
+/* ============================================================
+   Camada de fluidez global — sensação mais "tech" e responsiva
+   ============================================================ */
+@layer utilities {
+  .ease-fluid {
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .ease-spring {
+    transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  /* Cards com resposta suave ao hover/toque */
+  .fluid-card {
+    transition:
+      transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: transform;
+  }
+  .fluid-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card-hover);
+  }
+  .fluid-card:active {
+    transform: translateY(-1px) scale(0.995);
+  }
+
+  /* Carrosséis: snap suave e sem barra de rolagem */
+  .fluid-scroll-x {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .fluid-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
+  .fluid-scroll-x > * {
+    scroll-snap-align: start;
+  }
+
+  /* Entrada escalonada de listas/grades */
+  .fluid-stagger > * {
+    animation: fluid-rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .fluid-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+  .fluid-stagger > *:nth-child(2) { animation-delay: 0.06s; }
+  .fluid-stagger > *:nth-child(3) { animation-delay: 0.1s; }
+  .fluid-stagger > *:nth-child(4) { animation-delay: 0.14s; }
+  .fluid-stagger > *:nth-child(5) { animation-delay: 0.18s; }
+  .fluid-stagger > *:nth-child(6) { animation-delay: 0.22s; }
+  .fluid-stagger > *:nth-child(n + 7) { animation-delay: 0.26s; }
+}
+
+@keyframes fluid-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 12px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Respeita usuários que preferem menos movimento */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .fluid-card,
+  .fluid-stagger > *,
+  button,
+  a,
+  [role="button"] {
+    transition: none !important;
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+
+/* X de overlays (modais e banners): grande, sólido e sempre visível.
+   Área de toque de 40px+, fundo sólido com sombra — funciona em claro/escuro. */
+.overlay-close {
+  position: absolute;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background-color: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.25);
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.overlay-close:hover {
+  background-color: hsl(var(--muted));
+}
+.overlay-close:active {
+  transform: scale(0.92);
+}

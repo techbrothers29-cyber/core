@@ -1,0 +1,51 @@
+# Bah Ofertas
+
+> Plataforma de ofertas, hotéis, restaurantes, passeios e cupons de desconto em Gramado, Canela e toda a Serra Gaúcha (RS, Brasil).
+
+Bah Ofertas conecta turistas e moradores do Rio Grande do Sul aos melhores estabelecimentos da Serra Gaúcha. Reserva de hotéis e pousadas em tempo real, ingressos para parques (Snowland, Mini Mundo, Dreamland, GramadoZoo, Parque do Caracol, Alpen Park), restaurantes típicos, cafés coloniais, fondue, vinícolas em Bento Gonçalves e passeios na região.
+
+## Pages
+
+- [Home](/): Ofertas em destaque, hotéis, restaurantes e passeios na Serra Gaúcha.
+- [Hospedagem](/hospedagem): Reserva de hotéis e pousadas em Gramado, Canela e Serra Gaúcha.
+- [Restaurantes](/restaurantes): Restaurantes parceiros com cupons e descontos exclusivos.
+- [Entretenimento](/entretenimento): Parques, atrações e passeios na Serra Gaúcha.
+- [Serviços](/servicos): Serviços locais com ofertas especiais.
+- [Carros](/carros): Aluguel de carros e mobilidade.
+
+## Hospedagem por cidade
+
+- [Hotéis em Gramado](/hoteis-em-gramado): Os melhores hotéis e pousadas em Gramado/RS.
+- [Hotéis em Canela](/hoteis-em-canela): Hotéis em Canela, ao lado do Parque do Caracol.
+- [Hotéis em Bento Gonçalves](/hoteis-em-bento-goncalves): Hospedagem no Vale dos Vinhedos.
+- [Pousadas em Gramado](/pousadas-em-gramado): Pousadas charmosas e bem avaliadas.
+- [Pousadas em Canela](/pousadas-em-canela): Pousadas em Canela e arredores.
+- [Hotéis baratos em Gramado](/hoteis-baratos-em-gramado): Opções econômicas em Gramado.
+- [Hotéis na Serra Gaúcha](/hoteis-na-serra-gaucha): Visão geral da hotelaria na região.
+
+## Atrações e gastronomia
+
+- [Ofertas em Gramado](/ofertas-em-gramado): Cupons e descontos em Gramado.
+- [Ofertas em Canela](/ofertas-em-canela): Cupons e descontos em Canela.
+- [Passeios em Gramado](/passeios-em-gramado): Ingressos para parques e atrações.
+- [Passeios em Canela](/passeios-em-canela): Ecoturismo, trilhas e parques.
+- [Restaurantes em Gramado](/restaurantes-em-gramado): Fondue, café colonial e gastronomia típica.
+- [Fondue em Gramado](/fondue-em-gramado): Restaurantes com fondue em Gramado.
+- [Café Colonial em Gramado](/cafe-colonial-em-gramado): Cafés coloniais típicos.
+- [Rodízio em Gramado](/rodizio-em-gramado): Churrascarias e rodízios.
+- [Ingressos Snowland](/ingressos-snowland): Parque de neve com desconto.
+- [Ingressos Mini Mundo](/ingressos-mini-mundo): Parque temático Mini Mundo.
+- [Ingressos Dreamland](/ingressos-dreamland): Museu de cera e atrações Dreamland.
+- [Ingressos GramadoZoo](/ingressos-gramadozoo): Zoológico em Gramado.
+- [Ingressos Acquamotion](/ingressos-acquamotion): Parque aquático.
+- [Ingressos Alpen Park](/ingressos-alpen-park): Tirolesa, trenó e atrações em Canela.
+- [Ingressos Parque do Caracol](/ingressos-parque-do-caracol): Cascata do Caracol em Canela.
+- [Natal Luz Gramado](/natal-luz-gramado): Espetáculos e ingressos do Natal Luz.
+- [Hotéis com piscina em Gramado](/hoteis-com-piscina-em-gramado): Hotéis com piscina.
+- [Hotéis pet friendly em Gramado](/hoteis-pet-friendly-em-gramado): Hospedagem que aceita pets.
+
+## Optional
+
+- [Termos de Uso](/termos): Termos e condições da plataforma.
+- [Política de Privacidade](/privacidade): Política de privacidade e proteção de dados.
+- [Programa de Afiliados](/programa-afiliados): Comissões por indicação.

@@ -1,0 +1,109 @@
+import { lazy, Suspense, useEffect, useState } from "react";
+import CategoryNav from "@/components/CategoryNav";
+import HeroSection from "@/components/HeroSection";
+import SEOHead from "@/components/SEOHead";
+import { jsonLdOrganization, jsonLdWebsite } from "@/lib/seo";
+import FeaturedSection from "@/components/FeaturedSection";
+import Footer from "@/components/Footer";
+import { CarouselSkeletonLoader } from "@/components/ui/offer-skeleton";
+import { prefetchEstabelecimento } from "@/lib/route-prefetch";
+
+// Defer below-the-fold sections so the hero + first carousel paint faster
+const SecondaryFeaturedSection = lazy(() => import("@/components/SecondaryFeaturedSection"));
+const TertiaryFeaturedSection = lazy(() => import("@/components/TertiaryFeaturedSection"));
+const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
+
+const SectionSkeleton = () => (
+  <section className="py-6 px-4">
+    <div className="max-w-[1600px] mx-auto">
+      <CarouselSkeletonLoader type="offer" />
+    </div>
+  </section>
+);
+
+const Index = () => {
+  const [showDeferredSections, setShowDeferredSections] = useState(false);
+
+  // Reset the global "data da visita" whenever the user lands on/returns to home,
+  // so the next establishment visit starts at today's date.
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem("bah-novaxs-selected-date");
+    } catch {}
+  }, []);
+
+  // Pre-warm the Estabelecimento chunk during browser idle time so the first
+  // tap from the home feed feels instantaneous.
+  useEffect(() => {
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
+    const idle = w.requestIdleCallback;
+    if (idle) {
+      idle(() => prefetchEstabelecimento());
+    } else {
+      const timer = setTimeout(() => prefetchEstabelecimento(), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  // Mount below-the-fold sections only after the first paint/idle window. This
+  // keeps secondary banners, extra carousels and their images from competing
+  // with the hero + first carousel during a reload, especially on mobile.
+  useEffect(() => {
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(() => setShowDeferredSections(true), { timeout: 1200 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const timer = setTimeout(() => setShowDeferredSections(true), 700);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Bah Ofertas — Hotéis, Restaurantes e Passeios na Serra Gaúcha"
+        description="Reserve hotéis em Gramado e Canela, descontos em restaurantes, parques e passeios na Serra Gaúcha. Cupons e ofertas exclusivas com até 70% OFF no Bah Ofertas."
+        canonical="/"
+        keywords="bah ofertas, hotéis gramado, hotéis canela, ofertas serra gaúcha, restaurantes gramado, parques gramado, cupons desconto, hospedagem serra gaúcha"
+        city="Serra Gaúcha"
+        latitude={-29.3788}
+        longitude={-50.8740}
+        jsonLd={[jsonLdOrganization(), jsonLdWebsite()]}
+      />
+      <main role="main">
+
+        <HeroSection />
+        <section aria-labelledby="featured-heading">
+          <h2 id="featured-heading" className="sr-only">Ofertas em destaque</h2>
+          <FeaturedSection />
+        </section>
+        {showDeferredSections && (
+          <>
+            <section aria-labelledby="secondary-featured-heading">
+              <h2 id="secondary-featured-heading" className="sr-only">Mais ofertas exclusivas</h2>
+              <Suspense fallback={<SectionSkeleton />}>
+                <SecondaryFeaturedSection />
+              </Suspense>
+            </section>
+            <section aria-labelledby="tertiary-featured-heading">
+              <h2 id="tertiary-featured-heading" className="sr-only">Ofertas selecionadas</h2>
+              <Suspense fallback={<SectionSkeleton />}>
+                <TertiaryFeaturedSection />
+              </Suspense>
+            </section>
+            <section aria-labelledby="testimonials-heading">
+              <h2 id="testimonials-heading" className="sr-only">Avaliações dos clientes</h2>
+              <Suspense fallback={null}>
+                <TestimonialsSection />
+              </Suspense>
+            </section>
+          </>
+        )}
+      </main>
+      <Footer />
+      <CategoryNav />
+    </div>
+  );
+};
+
+export default Index;

@@ -1,0 +1,17 @@
+/* TEAM */
+Desenvolvedor: Equipe BahOfertas
+Site: https://bahofertas.com
+Email: contato@bahofertas.com
+Localização: Porto Alegre, Rio Grande do Sul, Brasil
+
+/* TECNOLOGIA */
+Frontend: React, TypeScript, Tailwind CSS
+Backend: Supabase
+Hospedagem: Lovable
+Ferramentas: Vite, ESLint
+
+/* SITE */
+Última atualização: 2025/01/15
+Linguagem: Português (Brasil)
+Foco: Ofertas e cupons de desconto na Serra Gaúcha
+Área de cobertura: Porto Alegre, Gramado, Canela, Caxias do Sul, Nova Hamburgo, São Leopoldo

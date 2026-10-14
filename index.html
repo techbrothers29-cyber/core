@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18172971010"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-18172971010');
+    </script>
+    <!-- Logo é importado via @/assets pelo Vite (URL com hash); preload do /logo-desktop.png era ignorado em produção e desperdiçava banda. -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Bah Ofertas — Hotéis, Restaurantes e Passeios na Serra Gaúcha</title>
+    <meta name="description" content="Reserve hotéis em Gramado e Canela, ingressos para Snowland, Mini Mundo e parques, restaurantes e passeios na Serra Gaúcha com descontos exclusivos. Compare preços e economize com o Bah Ofertas.">
+    <meta name="keywords" content="bah ofertas, ofertas em gramado, ofertas em canela, ingressos em gramado, passeios em gramado, restaurantes em gramado, hotéis em gramado, serra gaúcha">
+    <meta name="author" content="BahOfertas">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+    <meta name="google-site-verification" content="TDGU-LEpZ8KzQQSP0ZxMjk1nt280bW6QD_TJEcMtaas" />
+    <!-- Canonical é gerenciado por rota via <SEOHead> (react-helmet) para evitar canonicals duplicados. -->
+
+    <!-- Geo Tags Expandidas -->
+    <meta name="geo.region" content="BR-RS">
+    <meta name="geo.placename" content="Gramado, Canela, Bento Gonçalves, Caxias do Sul, Nova Petrópolis, Serra Gaúcha, Rio Grande do Sul">
+    <meta name="geo.position" content="-29.3788;-50.8740">
+    <meta name="ICBM" content="-29.3788, -50.8740">
+
+    <!-- Open Graph Enhanced -->
+
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://bahofertas.com/">
+    <meta property="og:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/NlX6JIttciW0Y4YMhNVyNzv96TN2/social-images/social-1780864234012-3_(1).webp">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:site_name" content="BahOfertas">
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image">
+
+
+    <meta name="twitter:image" content="https://storage.googleapis.com/gpt-engineer-file-uploads/NlX6JIttciW0Y4YMhNVyNzv96TN2/social-images/social-1780864234012-3_(1).webp">
+
+    <!-- Additional Meta Tags -->
+    <meta name="format-detection" content="telephone=yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#ef4444">
+
+    <!-- Progressive Web App -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Bah Ofertas">
+    <meta name="application-name" content="Bah Ofertas">
+
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+    <meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
+
+    <!-- Performance Optimizations -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com">
+    <link rel="dns-prefetch" href="//www.google-analytics.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Acelera primeiro carregamento da home: handshake antecipado com Supabase -->
+    <link rel="preconnect" href="https://lyypfrtnmhwahixvvjxk.supabase.co" crossorigin>
+    <link rel="dns-prefetch" href="//lyypfrtnmhwahixvvjxk.supabase.co">
+
+    <!-- Schema.org JSON-LD Expandido -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "name": "BahOfertas",
+      "description": "Plataforma de ofertas e cupons de desconto em Porto Alegre e Serra Gaúcha",
+      "url": "https://bahofertas.com",
+      "logo": "https://bahofertas.com/logo.png",
+      "address": {
+        "@type": "PostalAddress",
+        "addressLocality": "Porto Alegre",
+        "addressRegion": "RS",
+        "addressCountry": "BR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "-30.0346",
+        "longitude": "-51.2177"
+      },
+      "areaServed": [
+        {
+          "@type": "City",
+          "name": "Porto Alegre"
+        },
+        {
+          "@type": "City",
+          "name": "Gramado"
+        },
+        {
+          "@type": "City",
+          "name": "Canela"
+        },
+        {
+          "@type": "City",
+          "name": "Caxias do Sul"
+        },
+        {
+          "@type": "City",
+          "name": "Nova Hamburgo"
+        },
+        {
+          "@type": "City",
+          "name": "São Leopoldo"
+        },
+        {
+          "@type": "State",
+          "name": "Serra Gaúcha"
+        }
+      ],
+      "serviceType": ["Cupons de Desconto", "Ofertas Locais", "Turismo", "Gastronomia"],
+
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://bahofertas.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Breadcrumb Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://bahofertas.com/"
+        }
+      ]
+    }
+    </script>
+
+    <!-- TouristDestination — Serra Gaúcha -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "TouristDestination",
+      "name": "Serra Gaúcha",
+      "description": "Região turística do Rio Grande do Sul com Gramado, Canela, Bento Gonçalves, Caxias do Sul e Nova Petrópolis. Hotéis, parques, vinícolas, gastronomia e Natal Luz.",
+      "url": "https://bahofertas.com/",
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "-29.3788",
+        "longitude": "-50.8740"
+      },
+      "touristType": ["Casais", "Famílias", "Turismo gastronômico", "Ecoturismo", "Turismo de inverno"],
+      "includesAttraction": [
+        { "@type": "TouristAttraction", "name": "Natal Luz de Gramado" },
+        { "@type": "TouristAttraction", "name": "Snowland Gramado" },
+        { "@type": "TouristAttraction", "name": "Mini Mundo" },
+        { "@type": "TouristAttraction", "name": "Parque do Caracol" },
+        { "@type": "TouristAttraction", "name": "Vale dos Vinhedos" }
+      ]
+    }
+    </script>
+    <link rel="apple-touch-icon" href="/pwa-icon.png">
+  <meta property="og:title" content="Bah Ofertas — Hotéis, Restaurantes e Passeios na Serra Gaúcha">
+  <meta name="twitter:title" content="Bah Ofertas — Hotéis, Restaurantes e Passeios na Serra Gaúcha">
+  <meta property="og:description" content="Reserve hotéis em Gramado e Canela, ingressos para Snowland, Mini Mundo e parques, restaurantes e passeios na Serra Gaúcha com descontos exclusivos. Compare preços e economize com o Bah Ofertas.">
+  <meta name="twitter:description" content="Reserve hotéis em Gramado e Canela, ingressos para Snowland, Mini Mundo e parques, restaurantes e passeios na Serra Gaúcha com descontos exclusivos. Compare preços e economize com o Bah Ofertas.">
+</head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
