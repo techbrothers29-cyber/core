@@ -1,23 +1,25 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
-import { useSearchParams, useLocation } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import { createPortal } from "react-dom";
+import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
-import CategoryNav from "@/components/CategoryNav";
 import Footer from "@/components/Footer";
+import HomeBottomNav from "@/components/home/HomeBottomNav";
+import { HOME_CONTAINER } from "@/components/home/layout";
 import HotelSearchBar from "@/components/hospedagem/HotelSearchBar";
 import type { RoomGuests } from "@/components/hospedagem/HotelSearchBar";
 import HotelFilters from "@/components/hospedagem/HotelFilters";
-import HotelCard from "@/components/hospedagem/HotelCard";
-import HotelCardCompact from "@/components/hospedagem/HotelCardCompact";
-import MobileFilterChips, { SortMode, sortHotels } from "@/components/hospedagem/MobileFilterChips";
+import { type SortMode, sortHotels } from "@/components/hospedagem/MobileFilterChips";
 import SearchLoadingState from "@/components/hospedagem/SearchLoadingState";
-import heroImage from "@/assets/hospedagem-hero.jpg";
+import HotelResultCard from "@/components/hospedagem/redesign/HotelResultCard";
+import HotelFilterChips from "@/components/hospedagem/redesign/HotelFilterChips";
 import { useHotelSearch } from "@/hooks/useHotelSearch";
 import { HOTEL_DESTINATIONS } from "@/data/hotel-destinations";
 
 import { formatDateForApi } from "@/lib/date";
 import { useMemo } from "react";
-import { Loader2, Building2, MapPin, FlaskConical, Star, TreePine, Plane, Hotel as HotelIcon, Luggage, Search as SearchIcon, X } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Loader2, FlaskConical, Search as SearchIcon, X, ChevronLeft, SlidersHorizontal, Map as MapIcon, List } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -63,6 +65,28 @@ export interface Hotel {
 
 const SEARCH_STATE_KEY = 'hospedagem_search_state';
 
+// Sem token o HotelMap não renderiza nada; evita reservar espaço/botão para o mapa.
+const HAS_MAPBOX = Boolean(import.meta.env.VITE_MAPBOX_TOKEN);
+
+/** true quando a janela tem pelo menos `px` de largura (valor certo já no 1º render). */
+const useMinWidth = (px: number) => {
+  const query = `(min-width: ${px}px)`;
+  const [matches, setMatches] = useState<boolean>(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia(query).matches
+      : true
+  );
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const mql = window.matchMedia(query);
+    const onChange = () => setMatches(mql.matches);
+    onChange();
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, [query]);
+  return matches;
+};
+
 const saveSearchState = (data: any) => {
   try {sessionStorage.setItem(SEARCH_STATE_KEY, JSON.stringify(data));} catch {}
 };
@@ -98,6 +122,11 @@ const Hospedagem = () => {
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [showMap, setShowMap] = useState(false);
   const [hotelNameSearch, setHotelNameSearch] = useState("");
+  const [showSearchSheet, setShowSearchSheet] = useState(false);
+  const [mobileView, setMobileView] = useState<"list" | "map">("list");
+  const navigate = useNavigate();
+  const isMobile = !useMinWidth(768);
+  const isXl = useMinWidth(1280);
 
   const { hotels, setHotels, isLoading, error, search, destinationLabel, setDestinationLabel, resetSearch } = useHotelSearch();
   const selectedDestination = HOTEL_DESTINATIONS.find((item) => item.value === destination) || HOTEL_DESTINATIONS[0];
@@ -257,6 +286,117 @@ const Hospedagem = () => {
     setShowMap(hasMapResults);
   }, [hasMapResults]);
 
+  // Celular: volta para a lista quando não há mais hotéis com coordenadas.
+  useEffect(() => {
+    if (!hasMapResults || hotels.length === 0) setMobileView("list");
+  }, [hasMapResults, hotels.length]);
+
+  // ---------- Novo visual: dados derivados para o topo e os estados ----------
+  const activeFilterCount =
+    (filters.star_rating?.length || 0) +
+    (filters.kind?.length || 0) +
+    (filters.serp_filter?.length || 0) +
+    (filters.price_from != null || filters.price_to != null ? 1 : 0) +
+    (sortMode !== "default" ? 1 : 0);
+
+  const totalChildren = allChildren.length;
+  const guestSummary = [
+    `${safeRooms.length} quarto${safeRooms.length > 1 ? "s" : ""}`,
+    `${totalAdults} adulto${totalAdults > 1 ? "s" : ""}`,
+    ...(totalChildren > 0 ? [`${totalChildren} criança${totalChildren > 1 ? "s" : ""}`] : []),
+  ].join(", ");
+  const datesSummary =
+    checkIn && checkOut
+      ? `${format(checkIn, "d MMM", { locale: ptBR })} – ${format(checkOut, "d MMM", { locale: ptBR })}`
+      : checkIn
+        ? format(checkIn, "d MMM", { locale: ptBR })
+        : "Datas";
+
+  const mapAvailable = hotels.length > 0 && hasMapResults && HAS_MAPBOX;
+  const desktopMapVisible = !isMobile && showMap && mapAvailable;
+  const mobileMapVisible = isMobile && mobileView === "map" && mapAvailable && !isLoading;
+  const showMobileInlineSearch = hotels.length === 0 && !isLoading;
+  const firstRealHotelIndex = filteredHotels.findIndex((item) => !item.isTestHotel);
+
+  const handleBack = () => {
+    if (location.key !== "default") navigate(-1);
+    else navigate("/");
+  };
+
+  const renderMap = (mapClassName: string, wrapperClassName = "") => (
+    <Suspense fallback={<div className={`${mapClassName} bg-muted animate-pulse`} />}>
+      <HotelMap
+        hotels={filteredHotels}
+        destination={destination}
+        destinationLabel={destinationLabel}
+        onHotelClick={(hotel) => setSelectedHotel(hotel)}
+        wrapperClassName={wrapperClassName}
+        mapClassName={mapClassName}
+        showTitle={false} />
+    </Suspense>
+  );
+
+  const renderResults = () => {
+    if (isLoading) return <SearchLoadingState />;
+    if (error) {
+      return (
+        <div className="text-center py-16 md:py-20">
+          <p className="text-destructive mb-2">{error}</p>
+          <p className="text-muted-foreground text-sm">Tente ajustar sua busca</p>
+        </div>
+      );
+    }
+    if (hotels.length === 0) {
+      return (
+        <div className="py-10 md:py-16 text-center">
+          <p className="m-0 text-sm text-muted-foreground">
+            Escolha as datas e clique em <b className="font-semibold text-foreground">Buscar</b> para ver os preços em tempo real.
+          </p>
+        </div>
+      );
+    }
+    if (filteredHotels.length === 0) {
+      return (
+        <div className="text-center py-16">
+          <p className="text-muted-foreground">Nenhuma hospedagem encontrada com os filtros selecionados.</p>
+          <p className="text-sm text-muted-foreground mt-1">Tente ajustar seus filtros</p>
+        </div>
+      );
+    }
+    if (mobileMapVisible) {
+      return renderMap("rounded-2xl h-[calc(100dvh-250px)] min-h-[320px]");
+    }
+    return (
+      <ul className="m-0 p-0 list-none flex flex-col gap-6 md:gap-4">
+        {filteredHotels.map((hotel, index) => (
+          <li key={hotel.id}>
+            <HotelResultCard
+              hotel={hotel}
+              onOpen={() => setSelectedHotel(hotel)}
+              isBestPrice={firstRealHotelIndex !== -1 && index === firstRealHotelIndex}
+              priority={index < 2} />
+          </li>
+        ))}
+      </ul>
+    );
+  };
+
+  const floatingMapButton =
+    isMobile && mapAvailable && !isLoading && filteredHotels.length > 0 && !selectedHotel ?
+    <button
+      type="button"
+      onClick={() => {
+        setMobileView((v) => (v === "map" ? "list" : "map"));
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }}
+      className="md:hidden fixed left-1/2 -translate-x-1/2 bottom-[calc(78px+env(safe-area-inset-bottom))] z-40 h-11 px-5 rounded-full bg-[#222222] text-white text-sm font-semibold flex items-center gap-2 shadow-[0_4px_12px_rgba(0,0,0,0.3)] font-jakarta focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+        {mobileView === "map" ?
+      <>Lista<List className="h-4 w-4" aria-hidden="true" /></> :
+      <>Mapa<MapIcon className="h-4 w-4" aria-hidden="true" /></>
+      }
+      </button> :
+    null;
+
   return (
     <>
       <SEOHead
@@ -278,186 +418,182 @@ const Hospedagem = () => {
         ]}
       />
 
-      <div className="min-h-screen bg-background">
-        {/* Hero Section */}
-        <section className="relative pt-20 pb-16 overflow-hidden">
-          <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${heroImage})` }} />
-          <div className="absolute inset-0 bg-black/60" />
+      <div className="min-h-screen bg-background font-jakarta text-foreground">
+        {/* Celular: topo próprio (o cabeçalho global fica oculto nesta rota) */}
+        <div className="md:hidden sticky top-0 z-40 bg-background">
+          <div className={`${HOME_CONTAINER} flex items-center gap-2.5 pt-2.5 pb-2`}>
+            <button
+              type="button"
+              onClick={handleBack}
+              aria-label="Voltar"
+              className="w-11 h-11 shrink-0 rounded-full border border-[#dddddd] bg-background flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <ChevronLeft className="h-5 w-5" strokeWidth={1.8} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowSearchSheet(true)}
+              aria-label={`Alterar busca: ${selectedDestination.label}, ${datesSummary}, ${guestSummary}`}
+              className="flex-1 min-w-0 h-11 rounded-full border border-[#dddddd] shadow-[0_2px_6px_rgba(0,0,0,0.06)] px-[18px] flex flex-col justify-center text-left leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <span className="block truncate text-[13px] font-semibold text-foreground">{selectedDestination.label}</span>
+              <span className="block truncate text-[11px] text-muted-foreground">{datesSummary} · {guestSummary}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMobileFilters(true)}
+              aria-label={activeFilterCount > 0 ? `Filtros (${activeFilterCount} ativos)` : "Filtros"}
+              className="relative w-11 h-11 shrink-0 rounded-full border border-[#dddddd] bg-background flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+              <SlidersHorizontal className="h-[18px] w-[18px]" strokeWidth={1.8} aria-hidden="true" />
+              {activeFilterCount > 0 &&
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] leading-[18px] text-center" aria-hidden="true">
+                  {activeFilterCount}
+                </span>
+              }
+            </button>
+          </div>
+        </div>
 
-          <div className="container mx-auto px-4 relative z-10">
-            <div className="text-center mb-8 animate-[fadeInUp_0.6s_cubic-bezier(0.22,1,0.36,1)_both]">
-              <h1 className="text-3xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg">
-                 Hospedagens no Sul do Brasil
+        <div className={HOME_CONTAINER}>
+          {/* Barra de busca: sempre no desktop; no celular só antes da primeira busca */}
+          <div className={`pt-3 md:pt-6 ${showMobileInlineSearch ? "" : "hidden md:block"}`}>
+            <HotelSearchBar
+              destination={destination}
+              setDestination={handleDestinationChange}
+              checkIn={checkIn}
+              setCheckIn={setCheckIn}
+              checkOut={checkOut}
+              setCheckOut={setCheckOut}
+              rooms={safeRooms}
+              setRooms={setRooms}
+              residency={residency}
+              setResidency={setResidency}
+              onSearch={handleSearch}
+              isLoading={isLoading} />
+          </div>
+
+          {/* Chips de filtro + "Ver no mapa" */}
+          <HotelFilterChips
+            className="mt-2 md:mt-5"
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            sortMode={sortMode}
+            onSortChange={setSortMode}
+            onOpenAllFilters={() => setShowMobileFilters(true)}
+            trailing={mapAvailable ?
+            <button
+              type="button"
+              onClick={() => setShowMap((v) => !v)}
+              aria-pressed={showMap}
+              className="relative inline-flex h-10 items-center gap-2 whitespace-nowrap rounded-full border border-[#1f1f1f] bg-[#1f1f1f] px-4 text-sm font-semibold text-white transition-colors hover:bg-black before:absolute before:inset-x-0 before:-inset-y-0.5 before:content-[''] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                  <MapIcon className="h-4 w-4" aria-hidden="true" />
+                  {showMap ? "Ocultar mapa" : "Ver no mapa"}
+                </button> :
+            undefined
+            } />
+
+          {/* Resultados */}
+          <section ref={resultsRef} className="pt-3 md:pt-5 pb-10 md:pb-14 scroll-mt-20" aria-labelledby="hospedagem-titulo">
+            <div className="mb-4 md:mb-5">
+              <h1 id="hospedagem-titulo" className="m-0 text-[17px] md:text-2xl font-bold text-foreground">
+                Hotéis e pousadas em {selectedDestination.label}
               </h1>
-              <p className="text-white/80 text-lg max-w-xl mx-auto">
-                Encontre hotéis, pousadas e chalés com preços exclusivos
-              </p>
+              {(destinationLabel || isTestMode) &&
+              <p className="m-0 mt-1 text-sm text-muted-foreground">
+                  {filteredHotels.length > 0 ?
+                <>
+                      <strong className="font-semibold text-foreground">{filteredHotels.length} hospedagens</strong>
+                      <span> encontradas ao redor de </span>
+                    </> :
+                'Resultados para: '}
+                  <strong className="font-semibold text-foreground">{isTestMode ? 'Hotel de Teste (Certificação)' : destinationLabel}</strong>
+                </p>
+              }
               {isTestMode &&
-              <Badge variant="outline" className="mt-3 border-amber-400 text-amber-300 bg-amber-500/10">
+              <Badge variant="outline" className="mt-2 border-amber-500 text-amber-700 bg-amber-500/10">
                   <FlaskConical className="h-3 w-3 mr-1" />
                   Modo de Teste — Hotel de certificação carregado
                 </Badge>
               }
             </div>
-          </div>
-        </section>
 
-        {/* Search Bar */}
-        <div className="container mx-auto px-4 relative z-20 -mt-8 animate-[fadeInUp_0.6s_cubic-bezier(0.22,1,0.36,1)_both] [animation-delay:0.08s]">
-          <HotelSearchBar
-            destination={destination}
-            setDestination={handleDestinationChange}
-            checkIn={checkIn}
-            setCheckIn={setCheckIn}
-            checkOut={checkOut}
-            setCheckOut={setCheckOut}
-            rooms={safeRooms}
-            setRooms={setRooms}
-            residency={residency}
-            setResidency={setResidency}
-            onSearch={handleSearch}
-            isLoading={isLoading} />
-
-        </div>
-
-        {/* Results */}
-        <section ref={resultsRef} className="container mx-auto px-4 py-8 scroll-mt-20">
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Desktop sidebar filters — hidden on mobile via CSS */}
-            <aside className="hidden lg:block w-full lg:w-72 flex-shrink-0">
-              <HotelFilters
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                onApplyFilters={handleSearch} />
-
-            </aside>
-
-            <main className="flex-1">
-              {(destinationLabel || isTestMode) &&
-              <div className="mb-4 flex items-start gap-2.5 border-l-2 border-primary bg-primary/5 px-3 py-2.5 text-sm md:items-center md:bg-transparent md:px-0 md:py-0">
-                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary md:mt-0" />
-                  <span className="min-w-0 leading-snug text-muted-foreground">
-                    {filteredHotels.length > 0 ?
-                    <>
-                        <strong className="font-semibold text-foreground">{filteredHotels.length} hospedagens</strong>
-                        <span> encontradas ao redor de </span>
-                      </> :
-                    'Resultados para: '}
-                    <strong className="font-semibold text-foreground">{isTestMode ? 'Hotel de Teste (Certificação)' : destinationLabel}</strong>
-                </span>
-              </div>
-              }
-
-              {/* Search by hotel name */}
-              {hotels.length > 0 &&
-              <div className="mb-4">
+            {/* Busca pelo nome da hospedagem */}
+            {hotels.length > 0 &&
+            <div className="mb-5">
                 <div className="relative w-full md:max-w-md">
-                  <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                  <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                   <input
-                    type="text"
-                    aria-label={`Buscar hospedagem pelo nome em ${destinationLabel || selectedDestination.label}`}
-                    value={hotelNameSearch}
-                    onChange={(e) => setHotelNameSearch(e.target.value)}
-                    placeholder={`Buscar hospedagem pelo nome em ${destinationLabel || selectedDestination.label}…`}
-                    className="w-full h-11 pl-9 pr-9 rounded-lg bg-card border border-border/60 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 transition-colors"
-                  />
-                  {hotelNameSearch && (
-                    <button
-                      type="button"
-                      onClick={() => setHotelNameSearch("")}
-                      aria-label="Limpar busca"
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                    >
+                  type="text"
+                  aria-label={`Buscar hospedagem pelo nome em ${destinationLabel || selectedDestination.label}`}
+                  value={hotelNameSearch}
+                  onChange={(e) => setHotelNameSearch(e.target.value)}
+                  placeholder={`Buscar hospedagem pelo nome em ${destinationLabel || selectedDestination.label}…`}
+                  className="w-full h-11 pl-10 pr-11 rounded-full bg-background border border-[#dddddd] text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary/60 transition-colors" />
+
+                  {hotelNameSearch &&
+                <button
+                  type="button"
+                  onClick={() => setHotelNameSearch("")}
+                  aria-label="Limpar busca"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors">
                       <X className="h-4 w-4" />
                     </button>
-                  )}
+                }
                 </div>
-                {hotelNameSearch.trim() !== "" && filteredHotels.length === 0 && (
-                  <p className="mt-2 text-sm text-muted-foreground">
+                {hotelNameSearch.trim() !== "" && filteredHotels.length === 0 &&
+              <p className="mt-2 text-sm text-muted-foreground">
                     Nenhuma hospedagem encontrada para “{hotelNameSearch.trim()}”.
                   </p>
-                )}
+              }
               </div>
+            }
+
+            {/* Mapa acima da lista em telas médias (sem espaço para a coluna lateral) */}
+            {desktopMapVisible && !isXl && !isLoading && renderMap("rounded-2xl h-[360px]", "mb-5")}
+
+            <div className="flex items-start gap-6">
+              <div className="min-w-0 flex-1">{renderResults()}</div>
+              {desktopMapVisible && isXl && !isLoading &&
+              <aside className="w-[420px] shrink-0 sticky top-4" aria-label="Mapa das hospedagens">
+                  {renderMap("rounded-2xl h-[calc(100vh-32px)] max-h-[760px]")}
+                </aside>
               }
+            </div>
+          </section>
+        </div>
 
+        {/* Celular: editar a busca (destino, datas, hóspedes, nacionalidade) */}
+        <Sheet open={showSearchSheet} onOpenChange={setShowSearchSheet}>
+          <SheetContent side="bottom" className="max-h-[90vh] rounded-t-2xl flex flex-col p-4 overflow-hidden font-jakarta">
+            <SheetHeader className="shrink-0 text-left">
+              <SheetTitle>Alterar busca</SheetTitle>
+            </SheetHeader>
+            <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain mt-3 pb-4">
+              <HotelSearchBar
+                destination={destination}
+                setDestination={handleDestinationChange}
+                checkIn={checkIn}
+                setCheckIn={setCheckIn}
+                checkOut={checkOut}
+                setCheckOut={setCheckOut}
+                rooms={safeRooms}
+                setRooms={setRooms}
+                residency={residency}
+                setResidency={setResidency}
+                onSearch={() => {
+                  setShowSearchSheet(false);
+                  handleSearch();
+                }}
+                isLoading={isLoading} />
+            </div>
+          </SheetContent>
+        </Sheet>
 
-              {/* Mobile filter chips — visible only on mobile */}
-              {hotels.length > 0 &&
-              <div className="lg:hidden">
-                  <MobileFilterChips
-                  filters={filters}
-                  onFilterChange={handleFilterChange}
-                  onOpenFilters={() => setShowMobileFilters(true)}
-                  sortMode={sortMode}
-                  onSortChange={setSortMode} />
-
-                </div>
-              }
-
-              {/* Map — both mobile and desktop */}
-              {hotels.length > 0 && showMap && hasMapResults &&
-              <Suspense fallback={<div className="h-[180px] lg:h-[220px] rounded-lg bg-muted animate-pulse mb-4" />}>
-                  <HotelMap
-                    hotels={filteredHotels}
-                    destination={destination}
-                    destinationLabel={destinationLabel}
-                    onHotelClick={(hotel) => setSelectedHotel(hotel)} />
-                </Suspense>
-              }
-
-              {isLoading ?
-              <SearchLoadingState /> :
-              error ?
-              <div className="text-center py-20">
-                  <p className="text-destructive mb-2">{error}</p>
-                  <p className="text-muted-foreground text-sm">Tente ajustar sua busca</p>
-                </div> :
-              hotels.length === 0 ?
-              <div className="py-12" /> :
-              filteredHotels.length === 0 ?
-              <div className="text-center py-16">
-                  <p className="text-muted-foreground">Nenhuma hospedagem encontrada com os filtros selecionados.</p>
-                  <p className="text-sm text-muted-foreground mt-1">Tente ajustar seus filtros</p>
-                </div> :
-
-              <>
-                  {/* Desktop: standard grid with full cards */}
-                  <div className="hidden md:grid md:grid-cols-2 xl:grid-cols-3 gap-6 fluid-stagger">
-                    {filteredHotels.map((hotel, index) => {
-                    const firstRealHotelIndex = filteredHotels.findIndex((item) => !item.isTestHotel);
-                    return (
-                      <HotelCard
-                        key={hotel.id}
-                        hotel={hotel}
-                        onClick={() => setSelectedHotel(hotel)}
-                        isBestPrice={firstRealHotelIndex !== -1 && index === firstRealHotelIndex} />);
-
-
-                  })}
-                  </div>
-                  {/* Mobile: 2-col compact cards */}
-                  <div className="grid grid-cols-2 gap-3 mt-3 md:hidden fluid-stagger">
-                    {filteredHotels.map((hotel, index) => {
-                    const firstRealHotelIndex = filteredHotels.findIndex((item) => !item.isTestHotel);
-                    return (
-                      <HotelCardCompact
-                        key={hotel.id}
-                        hotel={hotel}
-                        onClick={() => setSelectedHotel(hotel)}
-                        isBestPrice={firstRealHotelIndex !== -1 && index === firstRealHotelIndex} />);
-
-
-                  })}
-                  </div>
-                </>
-              }
-            </main>
-          </div>
-        </section>
-
-        {/* Mobile filters sheet */}
+        {/* Painel completo de filtros (embaixo no celular, à direita no desktop) */}
         <Sheet open={showMobileFilters} onOpenChange={setShowMobileFilters}>
-          <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl flex flex-col p-4 overflow-hidden">
+          <SheetContent
+            side={isMobile ? "bottom" : "right"}
+            className={isMobile ?
+            "h-[85vh] rounded-t-2xl flex flex-col p-4 overflow-hidden font-jakarta" :
+            "w-full sm:max-w-md flex flex-col p-4 overflow-hidden font-jakarta"}>
             <SheetHeader className="shrink-0">
               <SheetTitle>Filtros</SheetTitle>
             </SheetHeader>
@@ -480,8 +616,10 @@ const Hospedagem = () => {
         </Sheet>
 
         <Footer />
-        <CategoryNav />
+        <HomeBottomNav />
       </div>
+
+      {floatingMapButton && (typeof document !== "undefined" ? createPortal(floatingMapButton, document.body) : floatingMapButton)}
 
       {selectedHotel &&
       <Suspense fallback={
