@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useCallback, useRef, useEffect, useState } from "react";
-import Map, { Marker, Popup } from "react-map-gl/mapbox";
-import type { MapRef } from "react-map-gl/mapbox";
+import Map, { Marker, Popup, Source, Layer } from "react-map-gl/mapbox";
+import type { MapRef, MapMouseEvent } from "react-map-gl/mapbox";
 import "mapbox-gl/dist/mapbox-gl.css";
 import { MapPin, Star } from "lucide-react";
 import type { Hotel } from "@/pages/Hospedagem";
@@ -33,9 +33,8 @@ interface HotelMapProps {
 const PricePin = memo(({ price, isTest, isSelected }: { price: number; isTest?: boolean; isSelected?: boolean }) => (
   <div
     className={`
-      px-2 py-1 rounded-lg shadow-lg text-xs font-bold whitespace-nowrap
-      transform -translate-x-1/2 -translate-y-full cursor-pointer
-      transition-all hover:scale-110
+      px-2 py-1 rounded-lg shadow-md text-xs font-bold whitespace-nowrap cursor-pointer
+      hover:scale-110
       ${isSelected
         ? "bg-foreground text-background scale-110 ring-2 ring-primary"
         : isTest
@@ -191,14 +190,31 @@ const HotelMap = ({
   }, [hotelsWithCoords, isReady]);
 
 
-  // The map is short (180-220px), so a popup gets clipped; open the hotel directly.
-  const handleMarkerSelect = useCallback(
-    (hotel: Hotel) => {
-      setSelectedHotel(null);
-      onHotelClick(hotel);
-    },
-    [onHotelClick]
+  // 1º toque mostra o cartão do hotel; tocar no cartão abre a página (evita abrir o hotel errado num toque impreciso).
+  const handleMarkerSelect = useCallback((hotel: Hotel) => setSelectedHotel(hotel), []);
+
+  // Agrupamento nativo do Mapbox: só os hotéis soltos viram etiqueta de preço (DOM); os demais viram círculos com a contagem.
+  const hotelsGeoJson = useMemo(
+    () => ({
+      type: "FeatureCollection" as const,
+      features: hotelsWithCoords.map((h) => ({
+        type: "Feature" as const,
+        properties: { id: String(h.id) },
+        geometry: { type: "Point" as const, coordinates: [h.longitude!, h.latitude!] },
+      })),
+    }),
+    [hotelsWithCoords]
   );
+  const [visibleIds, setVisibleIds] = useState<Set<string>>(() => new Set());
+  const updateVisible = useCallback(() => {
+    const map = mapRef.current?.getMap();
+    if (!map?.getSource("hotels")) return;
+    const ids = new Set<string>();
+    for (const f of map.querySourceFeatures("hotels")) {
+      if (!f.properties?.cluster) ids.add(String(f.properties?.id));
+    }
+    setVisibleIds((prev) => (prev.size === ids.size && [...ids].every((id) => prev.has(id)) ? prev : ids));
+  }, []);
 
   const handleMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
@@ -234,8 +250,16 @@ const HotelMap = ({
     setMapFailed(true);
   }, []);
 
-  const handleMapClick = useCallback(() => {
+  const handleMapClick = useCallback((e: MapMouseEvent) => {
     setSelectedHotel(null);
+    const cluster = e.features?.[0];
+    const map = mapRef.current?.getMap();
+    const source = map?.getSource("hotels") as any;
+    if (!cluster || !map || !source) return;
+    source.getClusterExpansionZoom(cluster.properties?.cluster_id, (err: unknown, zoom: number) => {
+      if (err) return;
+      map.easeTo({ center: (cluster.geometry as any).coordinates, zoom: Math.min(zoom, MAX_ZOOM), duration: 400 });
+    });
   }, []);
 
 
@@ -288,8 +312,31 @@ const HotelMap = ({
           onLoad={handleMapLoad}
           onError={handleMapError}
           onClick={handleMapClick}
+          interactiveLayerIds={["hotel-clusters"]}
+          onMoveEnd={updateVisible}
+          onSourceData={(e: any) => e.sourceId === "hotels" && e.isSourceLoaded && updateVisible()}
         >
-          {hotelsWithCoords.map((hotel) => (
+          <Source id="hotels" type="geojson" data={hotelsGeoJson} cluster clusterRadius={44} clusterMaxZoom={15}>
+            <Layer
+              id="hotel-clusters"
+              type="circle"
+              filter={["has", "point_count"]}
+              paint={{
+                "circle-color": "#d91f26",
+                "circle-radius": ["step", ["get", "point_count"], 16, 10, 20, 30, 25],
+                "circle-stroke-width": 3,
+                "circle-stroke-color": "#ffffff",
+              }}
+            />
+            <Layer
+              id="hotel-cluster-count"
+              type="symbol"
+              filter={["has", "point_count"]}
+              layout={{ "text-field": ["get", "point_count_abbreviated"], "text-size": 13, "text-font": ["DIN Pro Bold", "Arial Unicode MS Bold"] }}
+              paint={{ "text-color": "#ffffff" }}
+            />
+          </Source>
+          {hotelsWithCoords.filter((hotel) => visibleIds.has(String(hotel.id))).map((hotel) => (
             <HotelMarker
               key={hotel.id}
               hotel={hotel}
