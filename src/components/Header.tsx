@@ -98,7 +98,8 @@ const Header = () => {
   // a própria página desenha o topo (voltar / compartilhar / favoritar).
   const hideOnMobile = location.pathname === '/hospedagem'
     || location.pathname.startsWith('/hospedagem/hotel/')
-    || location.pathname.startsWith('/oferta/');
+    || location.pathname.startsWith('/oferta/')
+    || location.pathname.startsWith('/estabelecimento/');
   const isRedesign = isHome || hideOnMobile;
   const categories = ["Hospedagem", "Entretenimento", "Restaurantes", "Serviços", "Carros"];
   const categoryIcons: Record<string, any> = {
