@@ -89,6 +89,9 @@ const useMinWidth = (px: number) => {
   return matches;
 };
 
+// Posição da lista ao abrir um hotel, para voltar exatamente onde o usuário estava.
+const LIST_VIEW_KEY = 'hospedagem_list_view';
+
 const saveSearchState = (data: any) => {
   try {sessionStorage.setItem(SEARCH_STATE_KEY, JSON.stringify(data));} catch {}
 };
@@ -150,6 +153,28 @@ const Hospedagem = () => {
       if (source.destination) setDestination(source.destination);
       if (source.checkIn) setCheckIn(new Date(source.checkIn));
       if (source.checkOut) setCheckOut(new Date(source.checkOut));
+      if (Array.isArray(source.rooms) && source.rooms.length) setRooms(source.rooms);
+      if (source.filters) setFilters(source.filters);
+      if (source.sortMode) setSortMode(source.sortMode);
+      if (source.hotelNameSearch) setHotelNameSearch(source.hotelNameSearch);
+      // Voltando da página de um hotel: restaura a rolagem (e lista/mapa no celular).
+      try {
+        const view = JSON.parse(sessionStorage.getItem(LIST_VIEW_KEY) || "null");
+        sessionStorage.removeItem(LIST_VIEW_KEY);
+        if (view && Date.now() - view.at < 30 * 60_000) {
+          if (view.mobileView === "map") setMobileView("map");
+          const y = Number(view.scrollY) || 0;
+          let tries = 0;
+          const restore = () => {
+            if (document.documentElement.scrollHeight >= y + window.innerHeight * 0.5 || tries++ > 20) {
+              window.scrollTo({ top: y, behavior: "auto" });
+            } else {
+              window.setTimeout(restore, 50);
+            }
+          };
+          window.setTimeout(restore, 0);
+        }
+      } catch {}
     }
 
     if (navState) {
@@ -185,10 +210,13 @@ const Hospedagem = () => {
         destination,
         checkIn: checkIn?.toISOString(),
         checkOut: checkOut?.toISOString(),
-        rooms
+        rooms,
+        filters,
+        sortMode,
+        hotelNameSearch,
       });
     }
-  }, [hotels, destinationLabel, destination, checkIn, checkOut, rooms]);
+  }, [hotels, destinationLabel, destination, checkIn, checkOut, rooms, filters, sortMode, hotelNameSearch]);
 
   // Normalize room payload to avoid runtime crashes from stale/non-array state
   const safeRooms = Array.isArray(rooms) ? rooms : [{ adults: 2, children: [] }];
@@ -199,6 +227,9 @@ const Hospedagem = () => {
 
   // Cada hospedagem abre na própria página (mesmo conteúdo e reserva do antigo pop-up).
   const openHotel = (hotel: Hotel) => {
+    try {
+      sessionStorage.setItem(LIST_VIEW_KEY, JSON.stringify({ scrollY: window.scrollY, mobileView, at: Date.now() }));
+    } catch {}
     navigate(hotelPagePath(hotel), {
       state: {
         hotel,
