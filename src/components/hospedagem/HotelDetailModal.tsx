@@ -91,9 +91,11 @@ interface HotelDetailModalProps {
   searchResults?: Hotel[];
   destinationLabel?: string;
   destination?: string;
+  /** Renderiza como página inteira (rota própria do hotel) em vez de janela sobreposta. */
+  asPage?: boolean;
 }
 
-const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roomGuests, onClose, searchResults, destinationLabel, destination }: HotelDetailModalProps) => {
+const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roomGuests, onClose, searchResults, destinationLabel, destination, asPage = false }: HotelDetailModalProps) => {
   const navigate = useNavigate();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [hotelDetails, setHotelDetails] = useState<any>(null);
@@ -282,7 +284,7 @@ const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roo
         params.set('excluded_taxes', JSON.stringify(selectedRoom.taxes.excluded));
       }
 
-      onClose();
+      if (!asPage) onClose();
       navigate(`/hospedagem/checkout?${params.toString()}`, {
         state: { hotel, checkIn: checkIn?.toISOString(), checkOut: checkOut?.toISOString(), adults, children, searchResults, destinationLabel, destination }
       });
@@ -324,8 +326,8 @@ const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roo
   });
   const hotelCanonical = `/hospedagem?hid=${encodeURIComponent(hotel.id)}&slug=${slugify(hotel.name)}`;
 
-  return (
-    <Dialog open onOpenChange={onClose}>
+  const seoBlock = (
+    <>
       <SEOHead
         title={hotelSeo.title}
         description={hotelSeo.description}
@@ -358,10 +360,11 @@ const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roo
           ]),
         ]}
       />
-      <DialogContent aria-describedby={undefined} className="w-screen max-w-none sm:w-[94vw] sm:max-w-6xl h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[90dvh] overflow-x-hidden overflow-y-auto overscroll-contain p-0 gap-0 rounded-none sm:rounded-lg border-0 sm:border scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40">
-        <DialogHeader className="sr-only absolute">
-          <DialogTitle>{hotel.name}</DialogTitle>
-        </DialogHeader>
+    </>
+  );
+
+  const content = (
+    <>
 
         {/* Image Gallery with Swipe */}
         <div className="relative h-[clamp(220px,56vw,280px)] sm:h-[clamp(280px,32vw,380px)] bg-muted sm:rounded-t-lg overflow-hidden">
@@ -1065,6 +1068,29 @@ const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roo
             </div>
           </div>
         </div>
+    </>
+  );
+
+  if (asPage) {
+    return (
+      <>
+        {seoBlock}
+        <div className="w-full max-w-6xl mx-auto bg-background sm:border sm:border-[#ebebeb] sm:rounded-2xl overflow-hidden">
+          <h1 className="sr-only">{hotel.name}</h1>
+          {content}
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <Dialog open onOpenChange={onClose}>
+      {seoBlock}
+      <DialogContent aria-describedby={undefined} className="w-screen max-w-none sm:w-[94vw] sm:max-w-6xl h-[100dvh] sm:h-auto max-h-[100dvh] sm:max-h-[90dvh] overflow-x-hidden overflow-y-auto overscroll-contain p-0 gap-0 rounded-none sm:rounded-lg border-0 sm:border scrollbar-thin scrollbar-thumb-muted-foreground/20 scrollbar-track-transparent hover:scrollbar-thumb-muted-foreground/40">
+        <DialogHeader className="sr-only absolute">
+          <DialogTitle>{hotel.name}</DialogTitle>
+        </DialogHeader>
+        {content}
       </DialogContent>
     </Dialog>
   );

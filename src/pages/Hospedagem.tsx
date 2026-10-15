@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { createPortal } from "react-dom";
+import { hotelPagePath } from "@/lib/hotel-page";
 import { useSearchParams, useLocation, useNavigate } from "react-router-dom";
 import SEOHead from "@/components/SEOHead";
 import Footer from "@/components/Footer";
@@ -134,9 +135,8 @@ const Hospedagem = () => {
   // Restore state: first from navigation state (checkout back), then from sessionStorage (category nav)
   useEffect(() => {
     const navState = location.state as any;
-    if (navState?.hotel) {
-      setSelectedHotel(navState.hotel);
-    }
+    // Voltando do checkout: reabre a página do hotel (não mais o pop-up).
+    const reopenHotel = navState?.hotel ? navState.hotel as Hotel : null;
 
     const source = navState?.searchResults ? navState : loadSearchState();
     if (source?.searchResults?.length) {
@@ -154,6 +154,21 @@ const Hospedagem = () => {
     if (navState) {
       window.history.replaceState({}, document.title);
     }
+    if (reopenHotel) {
+      navigate(hotelPagePath(reopenHotel), {
+        replace: true,
+        state: {
+          hotel: reopenHotel,
+          checkIn: navState.checkIn,
+          checkOut: navState.checkOut,
+          adults: navState.adults,
+          children: navState.children,
+          searchResults: navState.searchResults,
+          destinationLabel: navState.destinationLabel,
+          destination: navState.destination,
+        },
+      });
+    }
   }, []);
 
   // Persist search state to sessionStorage whenever results change
@@ -164,10 +179,11 @@ const Hospedagem = () => {
         destinationLabel,
         destination,
         checkIn: checkIn?.toISOString(),
-        checkOut: checkOut?.toISOString()
+        checkOut: checkOut?.toISOString(),
+        rooms
       });
     }
-  }, [hotels, destinationLabel, destination, checkIn, checkOut]);
+  }, [hotels, destinationLabel, destination, checkIn, checkOut, rooms]);
 
   // Normalize room payload to avoid runtime crashes from stale/non-array state
   const safeRooms = Array.isArray(rooms) ? rooms : [{ adults: 2, children: [] }];
@@ -175,6 +191,21 @@ const Hospedagem = () => {
   // Compute totals for passing to detail modal
   const totalAdults = safeRooms.reduce((sum, r) => sum + r.adults, 0);
   const allChildren = safeRooms.flatMap((r) => r.children);
+
+  // Cada hospedagem abre na própria página (mesmo conteúdo e reserva do antigo pop-up).
+  const openHotel = (hotel: Hotel) => {
+    navigate(hotelPagePath(hotel), {
+      state: {
+        hotel,
+        checkIn: checkIn?.toISOString(),
+        checkOut: checkOut?.toISOString(),
+        rooms: safeRooms,
+        searchResults: hotels,
+        destinationLabel,
+        destination,
+      },
+    });
+  };
 
   useEffect(() => {
     if (isTestMode) {
@@ -329,7 +360,7 @@ const Hospedagem = () => {
         hotels={filteredHotels}
         destination={destination}
         destinationLabel={destinationLabel}
-        onHotelClick={(hotel) => setSelectedHotel(hotel)}
+        onHotelClick={(hotel) => openHotel(hotel)}
         wrapperClassName={wrapperClassName}
         mapClassName={mapClassName}
         showTitle={false} />
@@ -372,7 +403,7 @@ const Hospedagem = () => {
           <li key={hotel.id}>
             <HotelResultCard
               hotel={hotel}
-              onOpen={() => setSelectedHotel(hotel)}
+              onOpen={() => openHotel(hotel)}
               isBestPrice={firstRealHotelIndex !== -1 && index === firstRealHotelIndex}
               priority={index < 2} />
           </li>

@@ -52,6 +52,7 @@ const MinhasReservas = lazy(() => import("./pages/MinhasReservas"));
 const Favoritos = lazy(() => import("./pages/Favoritos"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Estabelecimento = lazy(() => import("./pages/Estabelecimento"));
+const HospedagemHotel = lazy(() => import("./pages/HospedagemHotel"));
 const Entretenimento = lazy(() => import("./pages/Entretenimento"));
 const Restaurantes = lazy(() => import("./pages/Restaurantes"));
 const Servicos = lazy(() => import("./pages/Servicos"));
@@ -128,6 +129,8 @@ const App = () => (
                     <Route path="/parceiro/:companyId/ofertas" element={<CompanyOffers />} />
                     <Route path="/hospedagem" element={<Hospedagem />} />
                     <Route path="/hospedagem/hotel/:hid/:slug" element={<HotelDetalhe />} />
+                    <Route path="/hospedagem/h/:hotelId/:slug" element={<HospedagemHotel />} />
+                    <Route path="/hospedagem/h/:hotelId" element={<HospedagemHotel />} />
                     <Route path="/oferta/:id/:slug" element={<OfertaDetalhe />} />
                     <Route path="/oferta/:id" element={<OfertaDetalhe />} />
                     <Route path="/estabelecimento/:name" element={<Estabelecimento />} />

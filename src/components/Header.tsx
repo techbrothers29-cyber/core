@@ -100,7 +100,7 @@ const Header = () => {
     || location.pathname.startsWith('/hospedagem/hotel/')
     || location.pathname.startsWith('/oferta/')
     || location.pathname.startsWith('/estabelecimento/');
-  const isRedesign = isHome || hideOnMobile;
+  const isRedesign = isHome || hideOnMobile || location.pathname.startsWith('/hospedagem/h/');
   const categories = ["Hospedagem", "Entretenimento", "Restaurantes", "Serviços", "Carros"];
   const categoryIcons: Record<string, any> = {
     "Hospedagem": BedDouble, "Entretenimento": Gamepad2, "Restaurantes": UtensilsCrossed,
