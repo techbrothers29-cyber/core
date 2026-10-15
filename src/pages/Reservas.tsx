@@ -5,6 +5,7 @@ import { Building2, Ticket, UtensilsCrossed, Tag, Calendar, ChevronLeft, Chevron
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
 import HomeBottomNav from "@/components/home/HomeBottomNav";
+import ReservationDetails from "@/components/reservas/ReservationDetails";
 
 type Kind = "hospedagem" | "entretenimento" | "gastronomia" | "ofertas";
 type Tone = "ok" | "wait" | "off" | "done";
@@ -18,7 +19,8 @@ interface Item {
   sortAt: string;
   price: number;
   status: { label: string; tone: Tone };
-  to: string;
+  source: "hotel" | "ticket" | "voucher";
+  raw: any;
 }
 
 const TABS: { id: "todas" | Kind; label: string; icon: typeof Ticket }[] = [
@@ -72,6 +74,7 @@ const Reservas = () => {
   const tab = (params.get("tipo") as (typeof TABS)[number]["id"]) || "todas";
   const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -82,11 +85,11 @@ const Reservas = () => {
         return;
       }
       const [hotels, tickets, vouchers, cats] = await Promise.all([
-        supabase.from("etg_bookings").select("id,hotel_name,check_in,check_out,total_price,status,created_at").eq("user_id", user.id),
-        supabase.from("ticket_bookings").select("id,status,establishment_name,products,total_price,use_date,created_at").eq("user_id", user.id),
+        supabase.from("etg_bookings").select("id,hotel_name,hotel_hid,check_in,check_out,rooms,guests,total_price,currency,status,payment_type,order_id,partner_order_id,voucher_url,created_at").eq("user_id", user.id),
+        supabase.from("ticket_bookings").select("id,status,establishment_name,localizador,voucher_id,products,tickets,total_price,use_date,created_at").eq("user_id", user.id),
         supabase
           .from("user_vouchers")
-          .select("id,status,purchase_price,expires_at,used_at,created_at,offers:offer_id(title,category,companies(name,category_id))")
+          .select("id,status,qr_code,purchase_price,expires_at,used_at,created_at,offers:offer_id(title,category,companies(name,category_id))")
           .eq("user_id", user.id),
         supabase.from("categories").select("id,slug,name"),
       ]);
@@ -104,7 +107,8 @@ const Reservas = () => {
           sortAt: b.check_in || b.created_at,
           price: Number(b.total_price) || 0,
           status: HOTEL_STATUS[b.status] || { label: b.status, tone: "wait" },
-          to: "/hospedagem/reservas",
+          source: "hotel",
+          raw: b,
         });
       }
       for (const t of (tickets.data || []) as any[]) {
@@ -118,7 +122,8 @@ const Reservas = () => {
           sortAt: t.use_date || t.created_at,
           price: Number(t.total_price) || 0,
           status: voucherStatus(t.status, t.use_date ? `${t.use_date}T23:59:59` : null),
-          to: "/dashboard?aba=vouchers",
+          source: "ticket",
+          raw: t,
         });
       }
       for (const v of (vouchers.data || []) as any[]) {
@@ -142,7 +147,8 @@ const Reservas = () => {
           sortAt: v.created_at,
           price: Number(v.purchase_price) || 0,
           status: voucherStatus(v.status, v.expires_at),
-          to: "/dashboard?aba=vouchers",
+          source: "voucher",
+          raw: { ...v, title: offer.title || "Ingresso", company: company.name || "Parques e atrações" },
         });
       }
       // Ativas/confirmadas primeiro; depois as mais recentes
@@ -237,12 +243,14 @@ const Reservas = () => {
               {shown.map((i) => {
                 const Icon = KIND_ICON[i.kind];
                 return (
-                  <li key={i.id}>
+                  <li key={i.id} className={`rounded-2xl border bg-card transition-shadow ${openId === i.id ? "border-[#1f1f1f] shadow-[0_6px_20px_rgba(0,0,0,0.08)] md:col-span-2" : "border-[#ebebeb] hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)]"}`}>
                     <button
                       type="button"
-                      onClick={() => navigate(i.to)}
-                      className={`w-full text-left rounded-2xl border border-[#ebebeb] bg-card p-4 md:p-5 transition-shadow hover:shadow-[0_6px_20px_rgba(0,0,0,0.06)] ${
-                        i.status.tone === "off" || i.status.tone === "done" ? "opacity-80" : ""
+                      aria-expanded={openId === i.id}
+                      aria-controls={`det-${i.id}`}
+                      onClick={() => setOpenId((cur) => (cur === i.id ? null : i.id))}
+                      className={`w-full text-left p-4 md:p-5 ${
+                        openId !== i.id && (i.status.tone === "off" || i.status.tone === "done") ? "opacity-80" : ""
                       }`}
                     >
                       <div className="flex items-start gap-3">
@@ -261,11 +269,19 @@ const Reservas = () => {
                               <Calendar className="w-4 h-4" aria-hidden="true" />
                               {i.date}
                             </span>
-                            <ChevronRight className="w-4 h-4 shrink-0" aria-hidden="true" />
+                            <span className="flex items-center gap-1 font-semibold text-foreground">
+                              {openId === i.id ? "Fechar" : i.source === "hotel" ? "Detalhes" : i.status.tone === "ok" ? "Ver QR Code" : "Detalhes"}
+                              <ChevronRight className={`w-4 h-4 shrink-0 transition-transform ${openId === i.id ? "-rotate-90" : "rotate-90"}`} aria-hidden="true" />
+                            </span>
                           </p>
                         </div>
                       </div>
                     </button>
+                    {openId === i.id && (
+                      <div id={`det-${i.id}`} className="border-t border-[#ebebeb] px-4 pb-5 pt-4 md:px-5">
+                        <ReservationDetails source={i.source} raw={i.raw} active={i.status.tone === "ok"} />
+                      </div>
+                    )}
                   </li>
                 );
               })}
