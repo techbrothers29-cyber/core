@@ -6,6 +6,20 @@ import { installDevtoolsBlocker } from "./lib/devtools-blocker";
 
 installDevtoolsBlocker();
 
+// Após cada publicação, os arquivos da versão anterior deixam de existir no Cloudflare.
+// Quem estava com o site aberto e navega para uma página ainda não carregada recebia
+// tela branca ("Failed to fetch dynamically imported module"). Recarrega uma vez
+// para buscar a versão nova; a trava de 10s evita loop se o erro for outro.
+window.addEventListener("vite:preloadError", (event) => {
+  const KEY = "bah:chunk-reload-at";
+  let last = 0;
+  try { last = Number(sessionStorage.getItem(KEY) || 0); } catch {}
+  if (Date.now() - last < 10_000) return;
+  try { sessionStorage.setItem(KEY, String(Date.now())); } catch {}
+  event.preventDefault();
+  window.location.reload();
+});
+
 const isInsideMapGestureZone = (target: EventTarget | null) =>
   target instanceof Element && Boolean(target.closest("[data-map-gesture-zone='true']"));
 
