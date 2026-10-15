@@ -6,18 +6,34 @@ import { installDevtoolsBlocker } from "./lib/devtools-blocker";
 
 installDevtoolsBlocker();
 
-// Após cada publicação, os arquivos da versão anterior deixam de existir no Cloudflare.
-// Quem estava com o site aberto e navega para uma página ainda não carregada recebia
-// tela branca ("Failed to fetch dynamically imported module"). Recarrega uma vez
-// para buscar a versão nova; a trava de 10s evita loop se o erro for outro.
+// Após cada publicação, os arquivos da versão anterior deixam de existir no Cloudflare
+// (e, por alguns segundos, os novos ainda podem não ter chegado a todos os servidores).
+// Quem estava com o site aberto recebia tela branca ("Failed to fetch dynamically imported module").
+// Recarrega para buscar a versão nova: até 3 tentativas em 1 minuto, com espera crescente, sem loop infinito.
+const CHUNK_RELOAD_KEY = "bah:chunk-reloads";
+const isChunkError = (msg: unknown) =>
+  /dynamically imported module|Importing a module script failed|Failed to load module script|error loading dynamically imported/i.test(String(msg ?? ""));
+let chunkReloadScheduled = false;
+const reloadForNewVersion = () => {
+  if (chunkReloadScheduled) return true;
+  let tries: number[] = [];
+  try { tries = JSON.parse(sessionStorage.getItem(CHUNK_RELOAD_KEY) || "[]"); } catch {}
+  tries = tries.filter((t) => Date.now() - t < 60_000);
+  if (tries.length >= 3) return false;
+  tries.push(Date.now());
+  try { sessionStorage.setItem(CHUNK_RELOAD_KEY, JSON.stringify(tries)); } catch {}
+  chunkReloadScheduled = true;
+  window.setTimeout(() => window.location.reload(), (tries.length - 1) * 2000);
+  return true;
+};
 window.addEventListener("vite:preloadError", (event) => {
-  const KEY = "bah:chunk-reload-at";
-  let last = 0;
-  try { last = Number(sessionStorage.getItem(KEY) || 0); } catch {}
-  if (Date.now() - last < 10_000) return;
-  try { sessionStorage.setItem(KEY, String(Date.now())); } catch {}
-  event.preventDefault();
-  window.location.reload();
+  if (reloadForNewVersion()) event.preventDefault();
+});
+window.addEventListener("error", (event) => {
+  if (isChunkError(event.message) || isChunkError((event as ErrorEvent).error?.message)) reloadForNewVersion();
+});
+window.addEventListener("unhandledrejection", (event) => {
+  if (isChunkError(event.reason?.message ?? event.reason)) reloadForNewVersion();
 });
 
 const isInsideMapGestureZone = (target: EventTarget | null) =>
