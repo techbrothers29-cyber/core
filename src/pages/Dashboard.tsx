@@ -93,7 +93,15 @@ const Dashboard = () => {
     usedVouchers: 0,
     activeVouchers: 0
   });
-  const [activeTab, setActiveTab] = useState("vouchers");
+  // "?aba=perfil" / "?aba=historico" abrem direto a aba (usado pela barra inferior da Home).
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const aba = new URLSearchParams(window.location.search).get("aba");
+      if (aba === "perfil") return "profile";
+      if (aba === "historico") return "history";
+    } catch {}
+    return "vouchers";
+  });
   const [selectedVoucher, setSelectedVoucher] = useState<UserVoucher | null>(null);
   const [isVoucherModalOpen, setIsVoucherModalOpen] = useState(false);
   const [voucherPdfLoading, setVoucherPdfLoading] = useState(false);

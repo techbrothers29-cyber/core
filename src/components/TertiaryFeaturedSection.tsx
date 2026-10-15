@@ -1,6 +1,5 @@
 import React, { useState, memo } from "react";
-import OfferProductCard from "@/components/OfferProductCard";
-import OfferProductCardCompact from "@/components/OfferProductCardCompact";
+import { HomeOfferCard } from "@/components/home/HomeCards";
 import PromotionalBanner from "@/components/PromotionalBanner";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
@@ -113,7 +112,7 @@ const TertiaryFeaturedSection = memo(() => {
             <CarouselContent className="-ml-3">
               {displayedOffers.map((offer) => (
                 <CarouselItem key={offer.id} className="pl-3 basis-[45%]">
-                  <OfferProductCardCompact offer={offer} />
+                  <HomeOfferCard offer={offer} />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -122,10 +121,10 @@ const TertiaryFeaturedSection = memo(() => {
 
         <div className="hidden md:block">
           <Carousel className="w-full max-w-[1600px] mx-auto" opts={{ align: "start", loop: true, dragFree: true }} setApi={setDesktopApi}>
-            <CarouselContent className="-ml-4">
+            <CarouselContent className="-ml-5">
               {displayedOffers.map((offer) => (
-                <CarouselItem key={offer.id} className="pl-4 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                  <OfferProductCard offer={offer} />
+                <CarouselItem key={offer.id} className="pl-5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                  <HomeOfferCard offer={offer} />
                 </CarouselItem>
               ))}
             </CarouselContent>

@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from "react";
-import CategoryNav from "@/components/CategoryNav";
+import HomeBottomNav from "@/components/home/HomeBottomNav";
 import HeroSection from "@/components/HeroSection";
 import SEOHead from "@/components/SEOHead";
 import { jsonLdOrganization, jsonLdWebsite } from "@/lib/seo";
@@ -99,7 +99,7 @@ const Index = () => {
         )}
       </main>
       <Footer />
-      <CategoryNav />
+      <HomeBottomNav />
     </div>
   );
 };

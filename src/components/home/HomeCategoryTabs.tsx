@@ -9,14 +9,16 @@ const TABS = [
   { label: "Carros", to: "/carros", icon: Car },
 ];
 
-/** Abas de categoria da Home (tablet/desktop): ícone acima do rótulo, sublinhado no item ativo. */
+/**
+ * Abas de categoria da Home, logo abaixo da busca (proposta visual).
+ * Celular: linha rolável, com respiro no fim para o último item não ficar colado na borda.
+ * Tablet/desktop: centralizadas.
+ */
 const HomeCategoryTabs = () => {
   const { pathname } = useLocation();
   return (
-    // Só tablet/desktop: no celular as categorias já estão na barra fixa inferior (CategoryNav),
-    // que também abre a lista de parceiros. Mostrar as duas duplicava as mesmas 5 categorias.
-    <nav aria-label="Categorias" className="hidden md:block w-full max-w-[1600px] mx-auto px-8">
-      <ul className="flex gap-9 justify-center m-0 p-0 list-none border-b border-[#ebebeb]">
+    <nav aria-label="Categorias" className="w-full max-w-[1600px] mx-auto md:px-8 mt-3 md:mt-0">
+      <ul className="flex gap-[26px] md:gap-9 md:justify-center overflow-x-auto m-0 pl-5 md:px-0 list-none border-b border-[#ebebeb] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden after:content-[''] after:shrink-0 after:w-5 md:after:hidden">
         {TABS.map(({ label, to, icon: Icon }) => {
           const active = pathname === to;
           return (
@@ -24,9 +26,9 @@ const HomeCategoryTabs = () => {
               <Link
                 to={to}
                 aria-current={active ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 md:gap-1.5 pt-2.5 pb-2 px-1 text-xs md:text-[13px] font-semibold border-b-2 transition-colors min-h-[44px] ${
+                className={`flex flex-col items-center gap-1 md:gap-1.5 pt-2.5 pb-2 px-1 text-xs md:text-[13px] font-medium md:font-semibold border-b-2 transition-colors min-h-[44px] ${
                   active
-                    ? "text-primary border-primary"
+                    ? "text-foreground border-foreground md:text-primary md:border-primary"
                     : "text-muted-foreground border-transparent hover:text-foreground hover:border-[#dddddd]"
                 }`}
               >

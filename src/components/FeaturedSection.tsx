@@ -1,6 +1,5 @@
 import React, { useState, memo } from "react";
-import EstablishmentCard from "@/components/EstablishmentCard";
-import EstablishmentCardCompact from "@/components/EstablishmentCardCompact";
+import { HomeEstablishmentCard } from "@/components/home/HomeCards";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
 import HomeSectionHeading from "@/components/home/HomeSectionHeading";
@@ -68,7 +67,7 @@ const FeaturedSection = memo(() => {
             <CarouselContent className="-ml-3">
               {displayedEstablishments.map((est) => (
                 <CarouselItem key={est.id} className="pl-3 basis-[45%]">
-                  <EstablishmentCardCompact establishment={est} />
+                  <HomeEstablishmentCard establishment={est} />
                 </CarouselItem>
               ))}
             </CarouselContent>
@@ -77,10 +76,10 @@ const FeaturedSection = memo(() => {
 
         <div className="hidden md:block">
           <Carousel className="w-full max-w-[1600px] mx-auto" opts={{ align: "start", loop: true, dragFree: true }} setApi={setDesktopApi}>
-            <CarouselContent className="-ml-4">
+            <CarouselContent className="-ml-5">
               {displayedEstablishments.map((est) => (
-                <CarouselItem key={est.id} className="pl-4 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
-                  <EstablishmentCard establishment={est} />
+                <CarouselItem key={est.id} className="pl-5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
+                  <HomeEstablishmentCard establishment={est} />
                 </CarouselItem>
               ))}
             </CarouselContent>
