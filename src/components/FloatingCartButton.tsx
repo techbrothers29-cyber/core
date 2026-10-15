@@ -21,8 +21,8 @@ const HIDDEN_ROUTE_PREFIXES = [
   '/auth',
   '/login',
   '/completar-cadastro',
-  '/hospedagem/checkout',
-  '/hospedagem/confirmacao',
+  // Toda a área de hospedagem (busca, página do hotel, checkout e confirmação)
+  '/hospedagem',
 ];
 
 const FloatingCartButton = () => {
