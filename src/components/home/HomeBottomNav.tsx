@@ -18,7 +18,7 @@ const PANEL_BY_ROLE: Record<Role, string> = {
 
 /**
  * Barra inferior do celular (proposta visual): Explorar · Favoritos · Reservas · Perfil.
- * - Reservas: ingressos, cupons e reservas do cliente (painel /dashboard).
+ * - Reservas: hospedagens, ingressos/entretenimento e gastronomia (/reservas).
  * - Perfil: dados do cliente, ou o painel do parceiro/afiliado/admin.
  * Sem login, Reservas e Perfil levam ao login.
  */
@@ -47,15 +47,15 @@ const HomeBottomNav = () => {
     { label: "Favoritos", to: "/favoritos", icon: Heart, active: pathname === "/favoritos", badge: items.length },
     {
       label: "Reservas",
-      to: user ? (isClient ? "/dashboard" : panel) : "/auth",
+      to: user ? "/reservas" : "/auth",
       icon: Ticket,
-      active: false,
+      active: pathname === "/reservas" || pathname === "/hospedagem/reservas",
     },
     {
       label: "Perfil",
       to: user ? (isClient ? "/dashboard?aba=perfil" : panel) : "/auth",
       icon: User,
-      active: false,
+      active: pathname === "/dashboard",
     },
   ];
 

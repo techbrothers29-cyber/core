@@ -600,7 +600,7 @@ const Dashboard = () => {
   const NAV = [
     { id: "vouchers", label: "Meus vouchers", icon: Ticket },
     { id: "history", label: "Histórico", icon: History },
-    { id: "reservas", label: "Minhas reservas", icon: Building2, href: "/hospedagem/reservas" },
+    { id: "reservas", label: "Minhas reservas", icon: Building2, href: "/reservas" },
     { id: "profile", label: "Dados pessoais", icon: UserIcon },
   ];
   const goTab = (item: (typeof NAV)[number]) => {

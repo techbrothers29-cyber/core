@@ -49,6 +49,7 @@ const Hospedagem = lazy(() => import("./pages/Hospedagem"));
 const HotelCheckout = lazy(() => import("./pages/HotelCheckout"));
 const HotelConfirmacao = lazy(() => import("./pages/HotelConfirmacao"));
 const MinhasReservas = lazy(() => import("./pages/MinhasReservas"));
+const Reservas = lazy(() => import("./pages/Reservas"));
 const Favoritos = lazy(() => import("./pages/Favoritos"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const Estabelecimento = lazy(() => import("./pages/Estabelecimento"));
@@ -191,6 +192,7 @@ const App = () => (
                   <Route path="/auth-redirect" element={<AuthRedirect />} />
                   <Route path="/completar-cadastro" element={<CompleteProfile />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/reservas" element={<Reservas />} />
                   <Route
                     path="/dashboard"
                     element={
