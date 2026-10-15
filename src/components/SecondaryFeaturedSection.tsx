@@ -5,6 +5,7 @@ import PromotionalBanner from "@/components/PromotionalBanner";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
 import HomeSectionHeading from "@/components/home/HomeSectionHeading";
+import { HOME_CONTAINER } from "@/components/home/layout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCarouselTouchPause } from "@/hooks/useCarouselTouchPause";
@@ -81,7 +82,7 @@ const SecondaryFeaturedSection = memo(() => {
 
   return (
     <section className="pt-6 md:pt-9 pb-3 relative overflow-hidden" aria-labelledby="restaurants-heading">
-      <div className="container mx-auto px-5 md:px-8">
+      <div className={HOME_CONTAINER}>
         {banner && (
           <PromotionalBanner imageUrl={banner.image_url} title={banner.title} />
         )}

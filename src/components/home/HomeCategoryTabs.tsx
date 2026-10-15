@@ -9,12 +9,15 @@ const TABS = [
   { label: "Carros", to: "/carros", icon: Car },
 ];
 
-/** Abas de categoria da Home: ícone acima do rótulo, sublinhado no item ativo. */
+/**
+ * Abas de categoria da Home: ícone acima do rótulo, sublinhado no item ativo.
+ * No celular rolam na horizontal (sem cortar a página); a partir do tablet ficam centralizadas.
+ */
 const HomeCategoryTabs = () => {
   const { pathname } = useLocation();
   return (
-    <nav aria-label="Categorias" className="border-b border-[#ebebeb] md:mx-8">
-      <ul className="flex gap-6 md:gap-9 md:justify-center overflow-x-auto px-5 md:px-0 m-0 list-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <nav aria-label="Categorias" className="w-full max-w-[1600px] mx-auto md:px-8">
+      <ul className="flex gap-6 md:gap-9 md:justify-center overflow-x-auto px-5 md:px-0 m-0 list-none border-b border-[#ebebeb] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {TABS.map(({ label, to, icon: Icon }) => {
           const active = pathname === to;
           return (

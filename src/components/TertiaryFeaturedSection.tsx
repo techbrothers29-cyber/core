@@ -5,6 +5,7 @@ import PromotionalBanner from "@/components/PromotionalBanner";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
 import HomeSectionHeading from "@/components/home/HomeSectionHeading";
+import { HOME_CONTAINER } from "@/components/home/layout";
 import { useQuery } from "@tanstack/react-query";
 import { useCarouselTouchPause } from "@/hooks/useCarouselTouchPause";
 import { CarouselSkeletonLoader } from "@/components/ui/offer-skeleton";
@@ -98,7 +99,7 @@ const TertiaryFeaturedSection = memo(() => {
 
   return (
     <section className="pt-6 md:pt-9 pb-6 relative overflow-hidden" aria-labelledby="offers-heading">
-      <div className="container mx-auto px-5 md:px-8">
+      <div className={HOME_CONTAINER}>
         {banner ? (
           <div className="mb-1">
             <PromotionalBanner imageUrl={banner.image_url} title={banner.title} />

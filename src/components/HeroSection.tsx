@@ -4,6 +4,7 @@ import { type CarouselApi } from "@/components/ui/carousel";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { optimizedImage } from "@/lib/image-optimize";
+import { HOME_CONTAINER } from "@/components/home/layout";
 
 interface BannerSlide {
   id: string;
@@ -210,16 +211,16 @@ const HeroSection = memo(() => {
   // Reserve hero space even while loading to prevent layout shift (CLS).
   if (slides.length === 0) {
     return (
-      <section className="mx-5 md:mx-8 mt-5 md:mt-7 relative overflow-hidden" aria-label="Ofertas em destaque">
-        <div className="w-full max-w-[1600px] mx-auto h-[160px] md:h-[250px] rounded-2xl bg-muted animate-pulse" />
+      <section className={`${HOME_CONTAINER} mt-5 md:mt-7 relative`} aria-label="Banners promocionais">
+        <div className="w-full h-[160px] md:h-auto md:aspect-[32/5] rounded-2xl bg-muted animate-pulse" />
       </section>
     );
   }
 
   return (
-    <section className="mx-5 md:mx-8 mt-5 md:mt-7 relative overflow-hidden" aria-label="Ofertas em destaque">
+    <section className={`${HOME_CONTAINER} mt-5 md:mt-7 relative`} aria-label="Banners promocionais">
       <Carousel
-        className="w-full max-w-[1600px] mx-auto select-none"
+        className="w-full overflow-hidden rounded-2xl select-none"
         opts={{ align: "start", loop: true, dragFree: false, watchDrag: true, skipSnaps: false }}
         setApi={setApi}
         role="region"
@@ -235,7 +236,8 @@ const HeroSection = memo(() => {
             const desktopSrc = optimizedImage(slide.desktop_image_url || slide.image_url, 1600, 80, "contain");
             return (
               <CarouselItem key={slide.id || index} className="pl-0">
-                <article className="relative h-[160px] md:h-[250px] overflow-hidden rounded-2xl select-none" itemScope itemType="https://schema.org/Offer">
+                {/* Celular: altura fixa com imagem própria (cover). Tablet/desktop: proporção 1600x250 do banner, sem faixas vazias. */}
+                <article className="relative h-[160px] md:h-auto md:aspect-[32/5] overflow-hidden rounded-2xl select-none" itemScope itemType="https://schema.org/Offer">
                   <div className="absolute inset-0">
                     <picture>
                       <source media="(max-width: 767px)" srcSet={mobileSrc} />

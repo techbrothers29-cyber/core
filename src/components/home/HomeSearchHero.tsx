@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import SearchResultsDropdown from "@/components/SearchResultsDropdown";
 import { useSelectedDate } from "@/components/GlobalDatePicker";
+import { HOME_CONTAINER } from "@/components/home/layout";
 
 /**
  * Busca principal da Home ("Para onde vamos?").
@@ -79,7 +80,7 @@ const HomeSearchHero = () => {
   );
 
   return (
-    <section className="px-4 md:px-8 pt-4 md:pt-10 pb-2 md:pb-6" aria-label="Buscar no Bah Ofertas">
+    <section className={`${HOME_CONTAINER} pt-4 md:pt-10 pb-2 md:pb-6`} aria-label="Buscar no Bah Ofertas">
       <h1 className="sr-only md:not-sr-only md:block md:text-center md:m-0 md:mb-6 md:text-[40px] md:leading-tight font-extrabold tracking-tight text-foreground">
         Para onde vamos?
       </h1>
@@ -87,7 +88,7 @@ const HomeSearchHero = () => {
       <div className="hidden md:block">
         <div ref={desktopRef} className="relative max-w-[860px] mx-auto text-left">
           <div className="flex items-center bg-card border border-[#dddddd] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.08)] p-1.5 pl-0">
-            <label className="flex-[1.4] min-w-0 px-7 py-2 rounded-full cursor-text hover:bg-muted/60 transition-colors">
+            <label className="flex-[1.4] min-w-0 px-5 lg:px-7 py-2 rounded-full cursor-text hover:bg-muted/60 transition-colors">
               <span className="block text-xs font-extrabold text-foreground">Onde</span>
               <input
                 ref={desktopInputRef}
@@ -96,7 +97,7 @@ const HomeSearchHero = () => {
                 onChange={(e) => onChange(e.target.value)}
                 onFocus={() => query.trim().length >= 2 && setShowResults(true)}
                 onKeyDown={onKeyDown}
-                placeholder="Cidade, hotel, parque ou restaurante"
+                placeholder="Cidade, hotel ou parque"
                 className="w-full bg-transparent border-0 p-0 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                 aria-label="Onde: buscar cidade, hotel, parque ou restaurante"
               />
@@ -106,7 +107,7 @@ const HomeSearchHero = () => {
               <PopoverTrigger asChild>
                 <button
                   type="button"
-                  className="flex-1 min-w-0 px-7 py-2 rounded-full text-left hover:bg-muted/60 transition-colors"
+                  className="flex-1 min-w-0 px-5 lg:px-7 py-2 rounded-full text-left hover:bg-muted/60 transition-colors"
                   aria-label={`Quando: data da visita ${format(selectedDate, "dd/MM/yyyy")}`}
                 >
                   <span className="block text-xs font-extrabold text-foreground">Quando</span>
@@ -119,10 +120,10 @@ const HomeSearchHero = () => {
             <button
               type="button"
               onClick={() => navigate("/hospedagem")}
-              className="flex-1 min-w-0 px-7 py-2 rounded-full text-left hover:bg-muted/60 transition-colors"
+              className="flex-1 min-w-0 px-5 lg:px-7 py-2 rounded-full text-left hover:bg-muted/60 transition-colors"
             >
               <span className="block text-xs font-extrabold text-foreground">Hospedagem</span>
-              <span className="block text-sm text-muted-foreground truncate">Buscar com hóspedes</span>
+              <span className="block text-sm text-muted-foreground truncate">Com hóspedes</span>
             </button>
             <button
               type="button"

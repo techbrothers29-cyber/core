@@ -14,7 +14,7 @@ interface HomeSectionHeadingProps {
 
 /** Título de seção da Home: alinhado à esquerda, com atalho "Ver todos". */
 const HomeSectionHeading = ({ id, title, mobileTitle, to, aside }: HomeSectionHeadingProps) => (
-  <div className="flex items-end justify-between gap-4 mb-3 md:mb-4">
+  <div className="flex items-center justify-between gap-4 mb-2 md:mb-3">
     <h2 id={id} className="m-0 text-lg md:text-[22px] font-semibold md:font-extrabold tracking-tight text-foreground">
       {mobileTitle ? (
         <>
@@ -30,7 +30,7 @@ const HomeSectionHeading = ({ id, title, mobileTitle, to, aside }: HomeSectionHe
       {to && (
         <Link
           to={to}
-          className="flex items-center gap-0.5 text-sm font-semibold text-foreground hover:underline underline-offset-4 min-h-[44px] md:min-h-0"
+          className="inline-flex items-center gap-0.5 min-h-[44px] min-w-[44px] justify-end text-sm font-semibold text-foreground hover:underline underline-offset-4"
           aria-label={`Ver todos: ${title}`}
         >
           <span className="hidden md:inline">Ver todos</span>

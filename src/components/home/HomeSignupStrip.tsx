@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { HOME_CONTAINER } from "@/components/home/layout";
 
 /** Faixa "5% OFF" para visitantes sem login. Leva ao mesmo cadastro do modal de boas-vindas. */
 const HomeSignupStrip = () => {
@@ -11,9 +12,9 @@ const HomeSignupStrip = () => {
   const go = () => navigate("/auth?mode=signup");
 
   return (
-    <div className="px-5 md:px-8 mt-5 md:mt-7">
+    <div className={`${HOME_CONTAINER} mt-5 md:mt-7`}>
       {/* Desktop */}
-      <div className="hidden md:flex items-center justify-between gap-6 max-w-[1280px] mx-auto bg-[#fff1f1] dark:bg-primary/10 rounded-2xl px-6 py-4">
+      <div className="hidden md:flex items-center justify-between gap-6 bg-[#fff1f1] dark:bg-primary/10 rounded-2xl px-6 py-4">
         <p className="m-0 text-[15px] text-foreground">
           <b className="text-primary">5% OFF</b> na primeira compra. Cadastre-se e economize até 70% na viagem.
         </p>

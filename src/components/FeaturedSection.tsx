@@ -4,6 +4,7 @@ import EstablishmentCardCompact from "@/components/EstablishmentCardCompact";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
 import HomeSectionHeading from "@/components/home/HomeSectionHeading";
+import { HOME_CONTAINER } from "@/components/home/layout";
 import { useCarouselTouchPause } from "@/hooks/useCarouselTouchPause";
 import { CarouselSkeletonLoader } from "@/components/ui/offer-skeleton";
 import { useNovaxsEstablishments } from "@/hooks/useNovaxsEstablishments";
@@ -57,7 +58,7 @@ const FeaturedSection = memo(() => {
 
   return (
     <section className="pt-6 md:pt-9 pb-3 relative overflow-hidden" aria-labelledby="entertainment-heading">
-      <div className="container mx-auto px-5 md:px-8">
+      <div className={HOME_CONTAINER}>
         <HomeSectionHeading
           id="entertainment-heading"
           title="Parques, atrações e passeios"

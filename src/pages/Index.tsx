@@ -7,6 +7,7 @@ import FeaturedSection from "@/components/FeaturedSection";
 import HomeSearchHero from "@/components/home/HomeSearchHero";
 import HomeCategoryTabs from "@/components/home/HomeCategoryTabs";
 import HomeSignupStrip from "@/components/home/HomeSignupStrip";
+import { HOME_CONTAINER } from "@/components/home/layout";
 import Footer from "@/components/Footer";
 import { CarouselSkeletonLoader } from "@/components/ui/offer-skeleton";
 import { prefetchEstabelecimento } from "@/lib/route-prefetch";
@@ -17,8 +18,8 @@ const TertiaryFeaturedSection = lazy(() => import("@/components/TertiaryFeatured
 const TestimonialsSection = lazy(() => import("@/components/TestimonialsSection"));
 
 const SectionSkeleton = () => (
-  <section className="py-6 px-4">
-    <div className="max-w-[1600px] mx-auto">
+  <section className="pt-6 md:pt-9 pb-3">
+    <div className={HOME_CONTAINER}>
       <CarouselSkeletonLoader type="offer" />
     </div>
   </section>

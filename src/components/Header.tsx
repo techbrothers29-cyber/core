@@ -209,7 +209,9 @@ const Header = () => {
       )}
 
       {/* Top Bar */}
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div className={isHome
+        ? "w-full max-w-[1600px] mx-auto px-5 md:px-8 py-2 md:py-3 flex items-center justify-between"
+        : "container mx-auto px-4 py-3 flex items-center justify-between"}>
         <div className="flex items-center gap-6" itemScope itemType="https://schema.org/Organization">
           <div className="flex items-center gap-2 text-2xl font-bold cursor-pointer" onClick={() => navigate('/')}>
             <HeaderLogo />

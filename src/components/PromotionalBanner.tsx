@@ -25,13 +25,13 @@ const PromotionalBanner = ({ imageUrl, title }: PromotionalBannerProps) => {
   // seguir a proporção real do arquivo (sem corte e sem distorção).
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto mb-2 md:mb-4 flex justify-center items-center px-4">
+    <div className="w-full mb-4 md:mb-6 flex justify-center items-center">
       <img
         src={optimizedImage(imageSrc, 1200, 72, "contain")}
         srcSet={optimizedSrcSet(imageSrc, 1200, 72, "contain")}
         sizes="(min-width: 768px) 1200px, 100vw"
-        alt="Banner promocional"
-        className="rounded-lg md:rounded-2xl shadow-lg w-full"
+        alt={title || "Banner promocional"}
+        className="rounded-2xl w-full"
         loading="lazy"
         decoding="async"
         onError={imageFallback(imageSrc)}
