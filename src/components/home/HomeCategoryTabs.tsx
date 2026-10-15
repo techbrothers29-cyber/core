@@ -17,7 +17,7 @@ const HomeCategoryTabs = () => {
   const { pathname } = useLocation();
   return (
     <nav aria-label="Categorias" className="w-full max-w-[1600px] mx-auto md:px-8">
-      <ul className="flex gap-6 md:gap-9 md:justify-center overflow-x-auto px-5 md:px-0 m-0 list-none border-b border-[#ebebeb] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <ul className="flex gap-6 md:gap-9 md:justify-center overflow-x-auto px-5 md:px-0 m-0 list-none border-b border-[#ebebeb] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [mask-image:linear-gradient(to_right,black_82%,transparent)] md:[mask-image:none]">
         {TABS.map(({ label, to, icon: Icon }) => {
           const active = pathname === to;
           return (
