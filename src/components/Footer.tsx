@@ -1,245 +1,184 @@
-import { Facebook, Instagram, Twitter, Mail, Phone, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Facebook, Instagram, Twitter, Mail, MessageCircle, MapPin } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+type FooterLink = { title: string; href: string };
+
+const SECTIONS: { title: string; links: FooterLink[] }[] = [
+  {
+    title: "Hospedagem",
+    links: [
+      { title: "Hotéis em Gramado", href: "/hoteis-em-gramado" },
+      { title: "Hotéis em Canela", href: "/hoteis-em-canela" },
+      { title: "Pousadas em Gramado", href: "/pousadas-em-gramado" },
+      { title: "Hotéis baratos em Gramado", href: "/hoteis-baratos-em-gramado" },
+      { title: "Hotéis na Serra Gaúcha", href: "/hoteis-na-serra-gaucha" },
+    ],
+  },
+  {
+    title: "Ofertas e passeios",
+    links: [
+      { title: "Ofertas em Gramado", href: "/ofertas-em-gramado" },
+      { title: "Ofertas em Canela", href: "/ofertas-em-canela" },
+      { title: "Passeios em Gramado", href: "/passeios-em-gramado" },
+      { title: "Restaurantes em Gramado", href: "/restaurantes-em-gramado" },
+    ],
+  },
+  {
+    title: "Para parceiros",
+    links: [
+      { title: "Área do Parceiro", href: "/parceiro/login" },
+      { title: "Programa de Afiliados", href: "/programa-afiliados" },
+    ],
+  },
+];
+
+/** URL genérica (ex.: "https://facebook.com") = rede ainda não configurada: não mostra o ícone. */
+const isRealProfile = (url?: string | null) => {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    return u.pathname.replace(/\/+$/, "").length > 0;
+  } catch {
+    return false;
+  }
+};
+
+const linkClass =
+  "inline-flex items-center min-h-[40px] md:min-h-0 md:py-1 text-sm text-[#6b6b6b] hover:text-foreground hover:underline underline-offset-2 transition-colors";
+
+/**
+ * Rodapé no novo visual: fundo cinza claro, colunas de links simples,
+ * contato direto e barra final com direitos, termos e redes sociais.
+ * Mantém todos os links de antes (importantes para SEO).
+ */
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  const [socialUrls, setSocialUrls] = useState({
-    facebook: "https://facebook.com",
-    instagram: "https://instagram.com",
-    twitter: "https://twitter.com",
+  const [socialUrls, setSocialUrls] = useState<{ facebook?: string; instagram?: string; twitter?: string }>({
+    instagram: "https://instagram.com/bahofertas.rs",
   });
 
   useEffect(() => {
-    const fetchSocialUrls = async () => {
-      const { data } = await supabase
-        .from("system_config")
-        .select("key, value")
-        .in("key", ["facebook_url", "instagram_url", "twitter_url"]);
-
-      if (data) {
-        const urls = {
-          facebook: (data.find((d) => d.key === "facebook_url")?.value as string) || "https://facebook.com",
-          instagram:
-            (data.find((d) => d.key === "instagram_url")?.value as string) || "https://instagram.com/bahofertas.rs",
-          twitter: (data.find((d) => d.key === "twitter_url")?.value as string) || "https://twitter.com",
-        };
-        setSocialUrls(urls);
-      }
+    let active = true;
+    supabase
+      .from("system_config")
+      .select("key, value")
+      .in("key", ["facebook_url", "instagram_url", "twitter_url"])
+      .then(({ data }) => {
+        if (!active || !data) return;
+        const get = (k: string) => (data.find((d) => d.key === k)?.value as string) || undefined;
+        setSocialUrls({
+          facebook: get("facebook_url"),
+          instagram: get("instagram_url") || "https://instagram.com/bahofertas.rs",
+          twitter: get("twitter_url"),
+        });
+      });
+    return () => {
+      active = false;
     };
-
-    fetchSocialUrls();
   }, []);
-  const userLinks = [
-    { title: "Hotéis em Gramado", href: "/hoteis-em-gramado" },
-    { title: "Hotéis em Canela", href: "/hoteis-em-canela" },
-    { title: "Pousadas em Gramado", href: "/pousadas-em-gramado" },
-    { title: "Hotéis baratos em Gramado", href: "/hoteis-baratos-em-gramado" },
-    { title: "Hotéis na Serra Gaúcha", href: "/hoteis-na-serra-gaucha" },
-    { title: "Ofertas em Gramado", href: "/ofertas-em-gramado" },
-    { title: "Ofertas em Canela", href: "/ofertas-em-canela" },
-    { title: "Passeios em Gramado", href: "/passeios-em-gramado" },
-    { title: "Restaurantes em Gramado", href: "/restaurantes-em-gramado" },
-  ];
-  const partnerLinks = [
-    { title: "Área do Parceiro", href: "/parceiro/login" },
-    { title: "Programa de Afiliados", href: "/programa-afiliados" },
-  ];
+
   const socialLinks = [
-    {
-      icon: Facebook,
-      href: socialUrls.facebook,
-      label: "Facebook",
-    },
-    {
-      icon: Instagram,
-      href: socialUrls.instagram,
-      label: "Instagram",
-    },
-    {
-      icon: Twitter,
-      href: socialUrls.twitter,
-      label: "Twitter",
-    },
-  ];
+    { icon: Instagram, href: socialUrls.instagram, label: "Instagram" },
+    { icon: Facebook, href: socialUrls.facebook, label: "Facebook" },
+    { icon: Twitter, href: socialUrls.twitter, label: "X (Twitter)" },
+  ].filter((s) => isRealProfile(s.href));
+
   return (
-    <footer className="relative bg-gradient-to-b from-card/95 via-card to-card/90 backdrop-blur-xl border-t border-border/60 mt-2 overflow-hidden">
-      {/* Rich decorative elements */}
-      <div className="absolute top-8 left-16 w-10 h-10 md:w-14 md:h-14 bg-primary/15 rounded-full blur-sm animate-pulse" />
-      <div className="absolute top-20 right-20 w-6 h-6 md:w-8 md:h-8 bg-accent/20 rounded-full blur-sm animate-pulse delay-600" />
-      <div className="absolute top-4 right-8 w-3 h-12 md:h-16 bg-gradient-to-b from-primary/10 to-transparent animate-pulse delay-300" />
-      <div className="absolute top-32 left-8 w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-secondary/12 to-transparent rounded-2xl blur-md animate-pulse delay-900" />
-      <div className="absolute bottom-20 left-1/4 w-20 h-1 md:w-28 md:h-1 bg-gradient-to-r from-transparent via-primary/8 to-transparent rotate-6 animate-pulse delay-900" />
-      <div className="absolute top-1/2 right-8 w-4 h-16 md:h-20 bg-gradient-to-b from-transparent via-secondary/6 to-transparent animate-pulse delay-1300" />
-      <div className="absolute bottom-8 right-1/3 w-8 h-8 md:w-10 md:h-10 border border-accent/15 rounded-lg animate-pulse delay-1100" />
-      <div className="absolute bottom-32 left-1/3 w-2 h-8 md:h-12 bg-gradient-to-b from-red-500/8 to-transparent animate-pulse delay-1500" />
-      {/* Gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none"></div>
-
-      <div className="container mx-auto px-4 pt-4 pb-4 relative">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-10 lg:gap-12">
-          {/* Brand Section */}
-          <div className="space-y-4 md:space-y-6 text-center md:text-left">
-            <div className="flex items-center justify-center md:justify-start gap-3 mb-4 md:mb-6">
-              <div className="relative">
-                <img
-                  src="/lovable-uploads/878abd68-logo-280.png"
-                  alt="Bah Ofertas — Descontos em Porto Alegre e Serra Gaúcha"
-                  width={280}
-                  height={280}
-                  loading="lazy"
-                  decoding="async"
-                  className="h-28 md:h-24 lg:h-28 w-auto relative z-10"
-                />
-                <div className="absolute inset-0 bg-primary/20 blur-lg scale-110 -z-10"></div>
-              </div>
-            </div>
-
-            <p className="text-muted-foreground text-sm leading-relaxed mx-auto md:mx-0 max-w-sm px-4 md:px-0">
-              As melhores ofertas de Porto Alegre e Serra Gaúcha estão aqui. Descontos exclusivos em Gramado, Canela,
-              Caxias do Sul e região.
+    <footer className="bg-[#f7f7f7] border-t border-[#ebebeb] font-jakarta text-foreground">
+      <div className="w-full max-w-[1600px] mx-auto px-5 md:px-8 pt-8 md:pt-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr] gap-x-8">
+          {/* Marca */}
+          <div className="pb-6 md:pb-8">
+            <Link to="/" aria-label="Bah Ofertas — início" className="inline-block">
+              <img
+                src="/lovable-uploads/878abd68-logo-280.png"
+                alt="Bah Ofertas"
+                width={280}
+                height={280}
+                loading="lazy"
+                decoding="async"
+                className="h-14 w-auto"
+              />
+            </Link>
+            <p className="m-0 mt-3 max-w-xs text-sm leading-relaxed text-[#6b6b6b]">
+              Descontos em hospedagem, passeios e restaurantes em Gramado, Canela e toda a Serra Gaúcha.
             </p>
-
-            {/* Social Links */}
-            <div className="flex items-center justify-center md:justify-start gap-2">
-              {socialLinks.map((social, index) => (
-                <Button
-                  key={index}
-                  variant="ghost"
-                  size="sm"
-                  className="h-10 w-10 p-0 hover:bg-primary/20 hover:text-primary hover:scale-110 transition-all duration-200 rounded-xl"
-                  asChild
-                >
-                  <a href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label}>
-                    <social.icon className="w-5 h-5" />
-                  </a>
-                </Button>
-              ))}
-            </div>
-          </div>
-
-          {/* Cidades Atendidas e Para Parceiros - Lado a Lado */}
-          <div className="grid grid-cols-2 gap-6 md:gap-8">
-            {/* Para Usuários */}
-            <div className="space-y-4 md:space-y-6 text-center md:text-left">
-              <h3 className="text-foreground font-bold text-base md:text-lg mb-4 md:mb-6 tracking-wide relative inline-block">
-                Hospedagem e Ofertas
-                <div className="absolute -bottom-2 left-0 right-0 md:right-auto w-full md:w-8 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full"></div>
-              </h3>
-              <ul className="space-y-3">
-                {userLinks.map((link, index) => (
-                  <li key={index}>
-                    <Link
-                      to={link.href}
-                      className="text-muted-foreground text-sm font-medium hover:text-primary transition-all duration-200 hover:translate-x-2 inline-block leading-relaxed group"
-                    >
-                      <span className="relative">
-                        {link.title}
-                        <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Para Parceiros */}
-            <div className="space-y-4 md:space-y-6 text-center md:text-left">
-              <h3 className="text-foreground font-bold text-base md:text-lg mb-4 md:mb-6 tracking-wide relative inline-block">
-                Para Parceiros
-                <div className="absolute -bottom-2 left-0 right-0 md:right-auto w-full md:w-8 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full"></div>
-              </h3>
-              <ul className="space-y-4">
-                {partnerLinks.map((link, index) => (
-                  <li key={index}>
-                    <Link
-                      to={link.href}
-                      className="text-muted-foreground text-sm font-medium hover:text-primary transition-all duration-200 hover:translate-x-2 inline-block leading-relaxed group"
-                    >
-                      <span className="relative">
-                        {link.title}
-                        <span className="absolute -bottom-0.5 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-                      </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Contato */}
-          <div className="space-y-4 md:space-y-6">
-            <h3 className="text-foreground font-bold text-base md:text-lg mb-4 md:mb-6 tracking-wide relative inline-block md:block text-center md:text-left">
-              Contato
-              <div className="absolute -bottom-2 left-0 right-0 md:right-auto w-full md:w-8 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full"></div>
-            </h3>
-            <div className="space-y-5">
-              <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors duration-200">
-                <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Mail className="w-5 h-5 text-primary" />
-                </div>
-                <a
-                  href="mailto:contato@bahofertas.com"
-                  className="text-muted-foreground text-sm font-medium hover:text-primary transition-colors leading-relaxed"
-                >
+            <ul className="m-0 mt-5 p-0 list-none space-y-1">
+              <li>
+                <a href="https://wa.me/5554999978084" target="_blank" rel="noopener noreferrer" className={`${linkClass} gap-2`}>
+                  <MessageCircle className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  WhatsApp (54) 99997-8084
+                </a>
+              </li>
+              <li>
+                <a href="mailto:contato@bahofertas.com" className={`${linkClass} gap-2`}>
+                  <Mail className="w-4 h-4 shrink-0" aria-hidden="true" />
                   contato@bahofertas.com
                 </a>
-              </div>
-              <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors duration-200">
-                <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <Phone className="w-5 h-5 text-primary" />
-                </div>
-                <a
-                  href="https://wa.me/5554999978084"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-muted-foreground text-sm font-medium hover:text-primary transition-colors leading-relaxed"
-                >
-                  (54) 99997-8084
-                </a>
-              </div>
-              <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors duration-200">
-                <div className="flex-shrink-0 w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-                <span className="text-muted-foreground text-sm font-medium leading-relaxed">
-                  Serra Gaúcha-RS
-                </span>
-              </div>
-            </div>
+              </li>
+              <li className="inline-flex items-center gap-2 min-h-[40px] md:min-h-0 md:py-1 text-sm text-[#6b6b6b]">
+                <MapPin className="w-4 h-4 shrink-0" aria-hidden="true" />
+                Serra Gaúcha, RS
+              </li>
+            </ul>
           </div>
+
+          {/* Colunas de links */}
+          {SECTIONS.map((section) => (
+            <nav
+              key={section.title}
+              aria-label={section.title}
+              className="border-t border-[#dddddd] md:border-t-0 py-5 md:pt-0 md:pb-8"
+            >
+              <h2 className="m-0 mb-2 md:mb-3 text-sm font-bold text-foreground">{section.title}</h2>
+              <ul className="m-0 p-0 list-none grid grid-cols-1 gap-x-6 md:block md:space-y-1">
+                {section.links.map((link) => (
+                  <li key={link.href}>
+                    <Link to={link.href} className={linkClass}>
+                      {link.title}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          ))}
         </div>
 
-        {/* Copyright */}
-        <div className="relative mt-8 md:mt-12 pt-6 md:pt-8">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent"></div>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
-            <p className="text-muted-foreground text-xs md:text-sm font-medium text-center md:text-left">
-              © {currentYear} <span className="text-primary font-semibold">Bah Ofertas</span>. Todos os direitos
-              reservados.
-            </p>
-            <div className="flex items-center gap-4 md:gap-6">
-              <Link
-                to="/termos"
-                className="text-muted-foreground text-xs md:text-sm font-medium hover:text-primary transition-colors duration-200 relative group"
-              >
-                Termos de Uso
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-              <Link
-                to="/privacidade"
-                className="text-muted-foreground text-xs md:text-sm font-medium hover:text-primary transition-colors duration-200 relative group"
-              >
-                Política de Privacidade
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-primary transition-all duration-300 group-hover:w-full"></span>
-              </Link>
-            </div>
+        {/* Barra final */}
+        <div className="border-t border-[#dddddd] py-5 flex flex-col-reverse gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-x-1 text-sm text-[#6b6b6b]">
+            <span>© {currentYear} Bah Ofertas</span>
+            <span aria-hidden="true">·</span>
+            <Link to="/termos" className="inline-flex items-center min-h-[40px] md:min-h-0 hover:text-foreground hover:underline underline-offset-2">
+              Termos de Uso
+            </Link>
+            <span aria-hidden="true">·</span>
+            <Link to="/privacidade" className="inline-flex items-center min-h-[40px] md:min-h-0 hover:text-foreground hover:underline underline-offset-2">
+              Privacidade
+            </Link>
           </div>
+          {socialLinks.length > 0 && (
+            <div className="flex items-center gap-1 -ml-2.5 md:ml-0 md:-mr-2.5">
+              {socialLinks.map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Bah Ofertas no ${s.label}`}
+                  className="w-11 h-11 inline-flex items-center justify-center rounded-full text-foreground hover:bg-black/5 transition-colors"
+                >
+                  <s.icon className="w-5 h-5" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </footer>
   );
 };
+
 export default Footer;
