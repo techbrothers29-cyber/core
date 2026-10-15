@@ -123,7 +123,7 @@ const Footer = () => {
 
       {/* Conteúdo principal */}
       <div className="w-full max-w-[1600px] mx-auto px-5 md:px-8 pt-8 md:pt-12 pb-4 md:pb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1.2fr] gap-x-10">
+        <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_0.9fr_auto] gap-x-10">
           {/* Marca */}
           <div className="pb-6 lg:pb-0">
             <Link to="/" aria-label="Bah Ofertas — página inicial" className="inline-block">
@@ -206,7 +206,7 @@ const Footer = () => {
                   </span>
                   <span className="leading-tight min-w-0">
                     <span className="block text-xs text-[#6b6b6b]">E-mail</span>
-                    <b className="text-sm font-semibold break-all group-hover:text-primary transition-colors">contato@bahofertas.com</b>
+                    <b className="text-sm font-semibold break-words group-hover:text-primary transition-colors">contato@bahofertas.com</b>
                   </span>
                 </a>
               </li>
