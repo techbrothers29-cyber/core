@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useLocation } from "react-router-dom";
 import { Search, Heart, Ticket, User } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
@@ -58,10 +59,9 @@ const HomeBottomNav = () => {
     },
   ];
 
-  return (
-    <>
-      {/* Espaço para a barra fixa não cobrir o fim da página */}
-      <div className="h-16 md:hidden" aria-hidden="true" />
+  // A barra vai direto para o <body>: a transição de páginas (PageTransition) aplica
+  // transform no conteúdo, o que faria o "fixed" ficar preso no fim da página.
+  const bar = (
       <nav
         aria-label="Navegação principal"
         className="md:hidden fixed bottom-0 inset-x-0 z-50 bg-card border-t border-[#ebebeb] pb-[env(safe-area-inset-bottom)] font-jakarta"
@@ -89,6 +89,13 @@ const HomeBottomNav = () => {
           ))}
         </ul>
       </nav>
+  );
+
+  return (
+    <>
+      {/* Espaço para a barra fixa não cobrir o fim da página */}
+      <div className="h-16 md:hidden" aria-hidden="true" />
+      {typeof document !== "undefined" ? createPortal(bar, document.body) : bar}
     </>
   );
 };

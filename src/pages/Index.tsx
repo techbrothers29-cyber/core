@@ -77,10 +77,11 @@ const Index = () => {
       <main role="main">
         <HomeSearchHero />
         <HomeCategoryTabs />
-        <HomeSignupStrip />
+        <HomeSignupStrip variant="desktop" />
         <HeroSection />
         {/* Cada seção já é um <section> com título próprio; sem embrulho extra (evita nomes duplicados para leitor de tela). */}
         <FeaturedSection />
+        <HomeSignupStrip variant="mobile" />
         {showDeferredSections && (
           <>
             <Suspense fallback={<SectionSkeleton />}>
