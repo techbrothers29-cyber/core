@@ -94,6 +94,12 @@ const Header = () => {
   // Na Home (novo visual), busca e categorias ficam no corpo da página.
   // Nas demais páginas o cabeçalho segue igual.
   const isHome = location.pathname === '/';
+  // Páginas já no novo visual: cabeçalho enxuto no desktop e, no celular,
+  // a própria página desenha o topo (voltar / compartilhar / favoritar).
+  const hideOnMobile = location.pathname === '/hospedagem'
+    || location.pathname.startsWith('/hospedagem/hotel/')
+    || location.pathname.startsWith('/oferta/');
+  const isRedesign = isHome || hideOnMobile;
   const categories = ["Hospedagem", "Entretenimento", "Restaurantes", "Serviços", "Carros"];
   const categoryIcons: Record<string, any> = {
     "Hospedagem": BedDouble, "Entretenimento": Gamepad2, "Restaurantes": UtensilsCrossed,
@@ -195,13 +201,13 @@ const Header = () => {
 
   return (
     <header
-      className={isHome
-        ? "bg-card border-b border-[#ebebeb] relative z-50 font-jakarta"
+      className={isRedesign
+        ? `bg-card border-b border-[#ebebeb] relative z-50 font-jakarta${hideOnMobile ? " hidden md:block" : ""}`
         : "bg-card/80 backdrop-blur-md shadow-[var(--shadow-card)] relative z-50"}
       role="banner"
     >
       {/* Decorative elements */}
-      {!isHome && (
+      {!isRedesign && (
         <>
           <div className="absolute top-2 right-4 w-4 h-4 md:w-6 md:h-6 bg-primary/15 rounded-full blur-sm animate-pulse opacity-60" />
           <div className="absolute top-1 left-12 w-2 h-2 md:w-3 md:h-3 bg-accent/20 rounded-full blur-sm animate-pulse delay-400 opacity-70" />
@@ -209,7 +215,7 @@ const Header = () => {
       )}
 
       {/* Top Bar */}
-      <div className={isHome
+      <div className={isRedesign
         ? "w-full max-w-[1600px] mx-auto px-5 md:px-8 py-2 md:py-3 flex items-center justify-between"
         : "container mx-auto px-4 py-3 flex items-center justify-between"}>
         <div className="flex items-center gap-6" itemScope itemType="https://schema.org/Organization">
@@ -220,7 +226,7 @@ const Header = () => {
 
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Desktop Search Bar */}
-          <div className={`${isHome ? 'hidden' : 'hidden md:flex'} items-center relative`} ref={searchContainerRef}>
+          <div className={`${isRedesign ? 'hidden' : 'hidden md:flex'} items-center relative`} ref={searchContainerRef}>
             <div className="relative flex items-center">
               <Input
                 type="text"
@@ -255,7 +261,7 @@ const Header = () => {
             variant="outline"
             size="icon"
             onClick={() => setIsSearchOpen(!isSearchOpen)}
-            className={`${isHome ? 'hidden' : 'md:hidden'} h-9 w-9 rounded-full border-border/60 transition-all duration-300 ${
+            className={`${isRedesign ? 'hidden' : 'md:hidden'} h-9 w-9 rounded-full border-border/60 transition-all duration-300 ${
               isSearchOpen
                 ? 'bg-primary text-primary-foreground border-primary shadow-md'
                 : 'bg-muted/40 hover:bg-primary/10 hover:border-primary/40 text-muted-foreground hover:text-primary'
@@ -311,9 +317,9 @@ const Header = () => {
             )
           ) : (
             <Button
-              variant={isHome ? "default" : "hero"}
+              variant={isRedesign ? "default" : "hero"}
               size="default"
-              className={isHome ? "rounded-full h-11 px-6 font-semibold" : undefined}
+              className={isRedesign ? "rounded-full h-11 px-6 font-semibold" : undefined}
               onClick={() => {
                 if (isMobile) {
                   setLoginDrawerMounted(true);
@@ -397,7 +403,7 @@ const Header = () => {
       {/* Mobile Search Bar - Expandable */}
       <div
         ref={mobileSearchContainerRef}
-        className={`${isHome ? 'hidden' : 'md:hidden'} border-t border-border/50 transition-all duration-300 ease-in-out relative ${
+        className={`${isRedesign ? 'hidden' : 'md:hidden'} border-t border-border/50 transition-all duration-300 ease-in-out relative ${
           isSearchOpen ? 'max-h-[400px] opacity-100 py-2 px-4' : 'max-h-0 opacity-0 py-0 px-4 overflow-hidden'
         }`}
       >
@@ -452,7 +458,7 @@ const Header = () => {
       </div>
 
       {/* Desktop Category Navigation */}
-      <nav className={`border-t border-border ${isHome ? 'hidden' : 'hidden md:block'}`} role="navigation" aria-label="Categorias principais">
+      <nav className={`border-t border-border ${isRedesign ? 'hidden' : 'hidden md:block'}`} role="navigation" aria-label="Categorias principais">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center gap-8 py-4 overflow-x-auto">
             {categories.map((category) => {
