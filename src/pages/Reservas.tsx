@@ -125,7 +125,10 @@ const Reservas = () => {
         const offer = v.offers || {};
         const company = offer.companies || {};
         const cat = catById.get(company.category_id) || {};
-        const kind: Kind = isFood(offer.category, cat.slug, cat.name)
+        // Sem oferta vinculada = ingresso de parque/atração (NovaXS), que é entretenimento.
+        const kind: Kind = !v.offers
+          ? "entretenimento"
+          : isFood(offer.category, cat.slug, cat.name)
           ? "gastronomia"
           : /entreten|lazer|passeio|parque|ingresso/i.test(`${offer.category} ${cat.slug}`)
             ? "entretenimento"
@@ -133,8 +136,8 @@ const Reservas = () => {
         list.push({
           id: `v-${v.id}`,
           kind,
-          title: offer.title || "Voucher",
-          subtitle: company.name || "Oferta",
+          title: offer.title || "Ingresso",
+          subtitle: company.name || "Parques e atrações",
           date: v.used_at ? `Usado em ${fmtDate(v.used_at)}` : `Válido até ${fmtDate(v.expires_at)}`,
           sortAt: v.created_at,
           price: Number(v.purchase_price) || 0,
