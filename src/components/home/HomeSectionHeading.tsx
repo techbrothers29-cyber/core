@@ -16,8 +16,14 @@ interface HomeSectionHeadingProps {
 const HomeSectionHeading = ({ id, title, mobileTitle, to, aside }: HomeSectionHeadingProps) => (
   <div className="flex items-end justify-between gap-4 mb-3 md:mb-4">
     <h2 id={id} className="m-0 text-lg md:text-[22px] font-semibold md:font-extrabold tracking-tight text-foreground">
-      <span className="md:hidden">{mobileTitle || title}</span>
-      <span className="hidden md:inline">{title}</span>
+      {mobileTitle ? (
+        <>
+          <span className="md:hidden">{mobileTitle}</span>
+          <span className="hidden md:inline">{title}</span>
+        </>
+      ) : (
+        title
+      )}
     </h2>
     <div className="flex items-center gap-4 shrink-0">
       {aside && <span className="hidden md:inline text-sm text-muted-foreground">{aside}</span>}
