@@ -1,7 +1,4 @@
 import {
-  Facebook,
-  Instagram,
-  Twitter,
   MapPin,
   ShieldCheck,
   Headset,
@@ -14,6 +11,10 @@ import { supabase } from "@/integrations/supabase/client";
 import logoDesktop from "@/assets/logo-desktop.png";
 import gmailIcon from "@/assets/icon-gmail.png";
 import instagramIcon from "@/assets/icon-instagram.png";
+import facebookIcon from "@/assets/icon-facebook.png";
+import xIcon from "@/assets/icon-x.png";
+import tiktokIcon from "@/assets/icon-tiktok.png";
+import kwaiIcon from "@/assets/icon-kwai.png";
 
 type FooterLink = { title: string; href: string };
 
@@ -54,6 +55,21 @@ const TRUST = [
 
 const WHATSAPP_URL = "https://wa.me/5554999978084";
 
+const SOCIALS = [
+  { key: "instagram", label: "Instagram", icon: instagramIcon },
+  { key: "facebook", label: "Facebook", icon: facebookIcon },
+  { key: "tiktok", label: "TikTok", icon: tiktokIcon },
+  { key: "kwai", label: "Kwai", icon: kwaiIcon },
+  { key: "twitter", label: "X", icon: xIcon },
+];
+const SOCIAL_DEFAULTS: Record<string, string> = {
+  instagram: "https://instagram.com/bahofertas.rs",
+  facebook: "https://www.facebook.com/bahofertas.rs",
+  tiktok: "https://www.tiktok.com/@bahofertas.rs",
+  kwai: "https://www.kwai.com/@bahofertas.rs",
+  twitter: "https://x.com/bahofertas",
+};
+
 /** URL genérica (ex.: "https://facebook.com") = rede não configurada: não mostra o ícone. */
 const isRealProfile = (url?: string | null) => {
   if (!url) return false;
@@ -77,38 +93,28 @@ const linkClass =
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const isHome = useLocation().pathname === "/";
-  const [socialUrls, setSocialUrls] = useState<{ facebook?: string; instagram?: string; twitter?: string }>({
-    instagram: "https://instagram.com/bahofertas.rs",
-  });
+  // Links das redes: vêm de system_config quando cadastrados; senão, o perfil padrão @bahofertas.rs.
+  const [socialUrls, setSocialUrls] = useState<Record<string, string>>(SOCIAL_DEFAULTS);
 
   useEffect(() => {
     let active = true;
     supabase
       .from("system_config")
       .select("key, value")
-      .in("key", ["facebook_url", "instagram_url", "twitter_url"])
+      .in("key", SOCIALS.map((s) => `${s.key}_url`))
       .then(({ data }) => {
         if (!active || !data) return;
-        const get = (k: string) => {
-          const v = data.find((d) => d.key === k)?.value as string | undefined;
-          return isRealProfile(v) ? v : undefined;
-        };
-        setSocialUrls({
-          facebook: get("facebook_url"),
-          instagram: get("instagram_url") || "https://instagram.com/bahofertas.rs",
-          twitter: get("twitter_url"),
-        });
+        const next = { ...SOCIAL_DEFAULTS };
+        for (const s of SOCIALS) {
+          const v = data.find((d) => d.key === `${s.key}_url`)?.value as string | undefined;
+          if (isRealProfile(v)) next[s.key] = v as string;
+        }
+        setSocialUrls(next);
       });
     return () => {
       active = false;
     };
   }, []);
-
-  const socialLinks = [
-    { icon: Instagram, href: socialUrls.instagram, label: "Instagram" },
-    { icon: Facebook, href: socialUrls.facebook, label: "Facebook" },
-    { icon: Twitter, href: socialUrls.twitter, label: "X (Twitter)" },
-  ].filter((s) => isRealProfile(s.href));
 
   return (
     <footer className="font-jakarta text-foreground bg-white border-t border-[#ebebeb]">
@@ -135,43 +141,37 @@ const Footer = () => {
       <div className="w-full max-w-[1600px] mx-auto px-5 md:px-8 pt-8 md:pt-12 pb-4 md:pb-10">
         <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr_1fr_0.9fr_auto] gap-x-10">
           {/* Marca */}
-          <div className="pb-6 lg:pb-0">
+          <div className="pb-6 lg:pb-0 text-center lg:text-left">
             <Link to="/" aria-label="Bah Ofertas — página inicial" className="inline-block">
               <img src={logoDesktop} alt="Bah Ofertas" width={200} height={80} loading="lazy" decoding="async" className="h-14 md:h-16 w-auto" />
             </Link>
-            <p className="m-0 mt-4 max-w-sm text-sm leading-relaxed text-[#5c5c5c]">
+            <p className="m-0 mt-4 mx-auto lg:mx-0 max-w-sm text-sm leading-relaxed text-[#5c5c5c]">
               As melhores ofertas de Porto Alegre e da Serra Gaúcha em um só lugar. Descontos exclusivos em Gramado,
               Canela, Caxias do Sul e região.
             </p>
-            {
-              <div className="mt-5 flex items-center gap-2">
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-2.5 lg:justify-start">
+              <a
+                href={WHATSAPP_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Falar com a Bah Ofertas no WhatsApp"
+                className="w-11 h-11 inline-flex items-center justify-center rounded-full bg-[#25D366] text-white hover:brightness-95 transition"
+              >
+                <WhatsAppIcon className="w-6 h-6" />
+              </a>
+              {SOCIALS.map((s) => (
                 <a
-                  href={WHATSAPP_URL}
+                  key={s.key}
+                  href={socialUrls[s.key]}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Falar com a Bah Ofertas no WhatsApp"
-                  className="w-11 h-11 inline-flex items-center justify-center rounded-full bg-[#25D366] text-white hover:brightness-95 transition"
+                  aria-label={`Bah Ofertas no ${s.label}`}
+                  className="w-11 h-11 inline-flex items-center justify-center rounded-full hover:brightness-95 hover:scale-105 transition"
                 >
-                  <WhatsAppIcon className="w-6 h-6" />
+                  <img src={s.icon} alt="" width={44} height={44} loading="lazy" className="w-11 h-11 object-contain" />
                 </a>
-                {socialLinks.map((s) => (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Bah Ofertas no ${s.label}`}
-                    className={s.label === "Instagram"
-                      ? "w-11 h-11 inline-flex items-center justify-center rounded-full hover:brightness-95 transition"
-                      : "w-11 h-11 inline-flex items-center justify-center rounded-full border border-[#dddddd] text-foreground hover:border-primary hover:text-primary transition-colors"}
-                  >
-                    {s.label === "Instagram"
-                      ? <img src={instagramIcon} alt="" width={44} height={44} className="w-11 h-11" />
-                      : <s.icon className="w-[18px] h-[18px]" aria-hidden="true" />}
-                  </a>
-                ))}
-              </div>
-            }
+              ))}
+            </div>
           </div>
 
           {/* Colunas de links: lista aberta no desktop, sanfona no celular (links sempre no HTML para SEO) */}
