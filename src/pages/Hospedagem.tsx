@@ -154,6 +154,10 @@ const Hospedagem = () => {
     if (navState) {
       window.history.replaceState({}, document.title);
     }
+    // Vindo de "Alterar datas ou hóspedes" na página do hotel: abre a busca no celular.
+    if (navState?.openSearch && !window.matchMedia("(min-width: 768px)").matches) {
+      setShowSearchSheet(true);
+    }
     if (reopenHotel) {
       navigate(hotelPagePath(reopenHotel), {
         replace: true,
@@ -531,8 +535,8 @@ const Hospedagem = () => {
               <p className="m-0 mt-1 text-sm text-muted-foreground">
                   {filteredHotels.length > 0 ?
                 <>
-                      <strong className="font-semibold text-foreground">{filteredHotels.length} hospedagens</strong>
-                      <span> encontradas ao redor de </span>
+                      <strong className="font-semibold text-foreground">{filteredHotels.length} {filteredHotels.length === 1 ? 'hospedagem' : 'hospedagens'}</strong>
+                      <span> {filteredHotels.length === 1 ? 'encontrada' : 'encontradas'} ao redor de </span>
                     </> :
                 'Resultados para: '}
                   <strong className="font-semibold text-foreground">{isTestMode ? 'Hotel de Teste (Certificação)' : destinationLabel}</strong>
@@ -626,7 +630,7 @@ const Hospedagem = () => {
             "h-[85vh] rounded-t-2xl flex flex-col p-4 overflow-hidden font-jakarta" :
             "w-full sm:max-w-md flex flex-col p-4 overflow-hidden font-jakarta"}>
             <SheetHeader className="shrink-0">
-              <SheetTitle>Filtros</SheetTitle>
+              <SheetTitle className="sr-only">Filtros</SheetTitle>
             </SheetHeader>
             <div
               className="flex-1 min-h-0 overflow-y-auto overscroll-contain mt-4 pb-8"

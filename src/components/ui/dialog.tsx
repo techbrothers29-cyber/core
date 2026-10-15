@@ -55,7 +55,7 @@ const DialogContent = React.forwardRef<
           className="pointer-events-auto inline-flex h-11 w-11 items-center justify-center rounded-full bg-background/95 backdrop-blur-sm border border-border shadow-md ring-offset-background transition-all cursor-pointer select-none active:scale-95 hover:bg-destructive hover:text-destructive-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
         >
           <X className="h-5 w-5 pointer-events-none" />
-          <span className="sr-only">Close</span>
+          <span className="sr-only">Fechar</span>
         </DialogPrimitive.Close>
       </div>
 

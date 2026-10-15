@@ -885,7 +885,7 @@ const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roo
           </div>
 
             {/* Booking Card — sticky sidebar on desktop, inline on mobile */}
-            <div className="min-w-0">
+            <div className="min-w-0 scroll-mt-20" id="hotel-booking">
               <div className="min-w-0 border border-border rounded-lg p-4 sm:p-5 lg:sticky lg:top-4 lg:max-h-[calc(90dvh-3rem)] lg:overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
                 {/* Header: price + dates */}
                 {hotel.priceUnavailable ? (
@@ -939,6 +939,15 @@ const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roo
                       <span className="font-medium">{adults} adulto{adults > 1 ? 's' : ''}</span>
                     </div>
                   </div>
+                  {asPage && (
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="min-h-[44px] -my-2 text-sm font-semibold text-foreground underline underline-offset-2"
+                    >
+                      Alterar datas ou hóspedes
+                    </button>
+                  )}
                 </div>
 
                 {!hotel.priceUnavailable && !roomsLoading && rooms.length === 0 && !showContactFallback && (

@@ -329,13 +329,12 @@ const HotelResultCard = memo(({ hotel, onOpen, isBestPrice, priority }: HotelRes
                   {hotel.nights && hotel.nights > 1
                     ? `Total: ${formatPrice(hotel.price)} · ${hotel.nights} noites · ${guestsLabel}`
                     : `Para ${guestsLabel}`}
-                  {" · "}
                 </span>
                 <button
                   type="button"
                   onClick={handleOpenButton}
                   aria-label={`Ver disponibilidade de ${hotel.name}`}
-                  className="-my-3 inline-flex min-h-[44px] items-center font-semibold text-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
+                  className="-mb-2 flex min-h-[44px] items-center font-semibold text-foreground underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                 >
                   Ver disponibilidade
                 </button>
