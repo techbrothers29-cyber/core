@@ -28,6 +28,35 @@ const HISTOGRAM_BARS = [
   55, 50, 45, 40, 35, 30, 25, 20, 18, 15, 12, 10, 8, 5,
 ];
 
+// Opções compartilhadas com os chips de filtro da página de resultados.
+// ETG "kind" values
+export const HOTEL_PROPERTY_TYPES = [
+  { id: "Hotel", label: "Hotel" },
+  { id: "Guesthouse", label: "Pousada" },
+  { id: "Hostel", label: "Hostel" },
+  { id: "Apartments", label: "Apartamento" },
+  { id: "Resort", label: "Resort" },
+  { id: "Villa", label: "Chalé / Villa" },
+];
+
+// ETG star_rating: 1–5 (0 = sem classificação)
+export const HOTEL_STAR_OPTIONS = [
+  { value: 5, label: "5 estrelas" },
+  { value: 4, label: "4 estrelas" },
+  { value: 3, label: "3 estrelas" },
+  { value: 2, label: "2 estrelas" },
+];
+
+// ETG serp_filter amenities
+export const HOTEL_AMENITY_FILTERS = [
+  { id: "has_breakfast", label: "Café da manhã", icon: UtensilsCrossed },
+  { id: "has_internet", label: "Wi-Fi", icon: Wifi },
+  { id: "has_parking", label: "Estacionamento", icon: Car },
+  { id: "air_conditioning", label: "Ar-condicionado", icon: Snowflake },
+];
+
+export const HOTEL_PRICE_MAX = PRICE_MAX;
+
 const HotelFilters = ({ filters, onFilterChange, onApplyFilters, sortMode, onSortChange }: HotelFiltersProps) => {
   const [priceRange, setPriceRange] = useState([filters.price_from ?? 0, filters.price_to ?? 5000]);
 
@@ -43,31 +72,9 @@ const HotelFilters = ({ filters, onFilterChange, onApplyFilters, sortMode, onSor
     onSortChange?.("default");
   };
 
-  // ETG "kind" values
-  const propertyTypes = [
-    { id: "Hotel", label: "Hotel" },
-    { id: "Guesthouse", label: "Pousada" },
-    { id: "Hostel", label: "Hostel" },
-    { id: "Apartments", label: "Apartamento" },
-    { id: "Resort", label: "Resort" },
-    { id: "Villa", label: "Chalé / Villa" },
-  ];
-
-  // ETG star_rating: 1–5 (0 = sem classificação)
-  const ratingOptions = [
-    { value: 5, label: "5 estrelas" },
-    { value: 4, label: "4 estrelas" },
-    { value: 3, label: "3 estrelas" },
-    { value: 2, label: "2 estrelas" },
-  ];
-
-  // ETG serp_filter amenities
-  const amenityFilters = [
-    { id: "has_breakfast", label: "Café da manhã", icon: UtensilsCrossed },
-    { id: "has_internet", label: "Wi-Fi", icon: Wifi },
-    { id: "has_parking", label: "Estacionamento", icon: Car },
-    { id: "air_conditioning", label: "Ar-condicionado", icon: Snowflake },
-  ];
+  const propertyTypes = HOTEL_PROPERTY_TYPES;
+  const ratingOptions = HOTEL_STAR_OPTIONS;
+  const amenityFilters = HOTEL_AMENITY_FILTERS;
 
   // Price slider updates local state only — committed on "Aplicar filtros"
   const handlePriceChange = (values: number[]) => {

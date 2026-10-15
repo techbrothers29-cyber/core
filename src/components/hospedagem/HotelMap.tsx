@@ -22,6 +22,12 @@ interface HotelMapProps {
   destination: string;
   destinationLabel: string;
   onHotelClick: (hotel: Hotel) => void;
+  /** Classes do bloco externo (padrão: "mb-4"). */
+  wrapperClassName?: string;
+  /** Altura/forma da caixa do mapa (padrão: 180px no celular, 220px no desktop). */
+  mapClassName?: string;
+  /** Mostra o título "Explore ... no Mapa" acima do mapa (padrão: sim). */
+  showTitle?: boolean;
 }
 
 const PricePin = memo(({ price, isTest, isSelected }: { price: number; isTest?: boolean; isSelected?: boolean }) => (
@@ -108,7 +114,15 @@ const HotelMarker = memo(({
 
 HotelMarker.displayName = "HotelMarker";
 
-const HotelMap = ({ hotels, destination, destinationLabel, onHotelClick }: HotelMapProps) => {
+const HotelMap = ({
+  hotels,
+  destination,
+  destinationLabel,
+  onHotelClick,
+  wrapperClassName = "mb-4",
+  mapClassName = "rounded-xl h-[180px] lg:h-[220px]",
+  showTitle = true,
+}: HotelMapProps) => {
   const mapRef = useRef<MapRef>(null);
   const [selectedHotel, setSelectedHotel] = useState<Hotel | null>(null);
   const [isReady, setIsReady] = useState(false);
@@ -228,15 +242,17 @@ const HotelMap = ({ hotels, destination, destinationLabel, onHotelClick }: Hotel
   if (!MAPBOX_TOKEN || hotelsWithCoords.length === 0 || mapFailed) return null;
 
   return (
-    <div className="mb-4">
-      <div className="flex items-center gap-2 mb-3">
-        <MapPin className="h-4 w-4 text-primary" />
-        <h3 className="text-sm font-semibold text-foreground">
-          Explore {destinationLabel || "a região"} no Mapa
-        </h3>
-      </div>
+    <div className={wrapperClassName}>
+      {showTitle && (
+        <div className="flex items-center gap-2 mb-3">
+          <MapPin className="h-4 w-4 text-primary" />
+          <h3 className="text-sm font-semibold text-foreground">
+            Explore {destinationLabel || "a região"} no Mapa
+          </h3>
+        </div>
+      )}
       <div
-        className="relative rounded-xl overflow-hidden border border-border shadow-sm h-[180px] lg:h-[220px] w-full select-none bg-muted/40"
+        className={`relative overflow-hidden border border-border shadow-sm w-full select-none bg-muted/40 ${mapClassName}`}
         style={{ touchAction: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
         data-map-gesture-zone="true"
       >
