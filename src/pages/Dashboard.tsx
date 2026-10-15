@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { User, Session } from "@supabase/supabase-js";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { MapPin, Calendar, QrCode, LogOut, User as UserIcon, History, ShoppingCart, X, Check, Camera, Edit3, DollarSign, TrendingUp, Copy, Building2 } from "lucide-react";
+import { MapPin, Calendar, QrCode, LogOut, User as UserIcon, History, ShoppingCart, X, Check, Camera, Edit3, DollarSign, TrendingUp, Copy, Building2, Ticket, ChevronLeft, ChevronRight } from "lucide-react";
+import HomeBottomNav from "@/components/home/HomeBottomNav";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatCurrency } from "@/lib/utils";
@@ -115,6 +116,14 @@ const Dashboard = () => {
   const [isLoadingVouchers, setIsLoadingVouchers] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const location = useLocation();
+  // A barra inferior navega para /dashboard?aba=... com a página já aberta: acompanha a aba.
+  useEffect(() => {
+    const aba = new URLSearchParams(location.search).get("aba");
+    if (aba === "perfil") setActiveTab("profile");
+    else if (aba === "historico") setActiveTab("history");
+    else if (aba === "vouchers" || location.search === "") setActiveTab("vouchers");
+  }, [location.search]);
   const { toast } = useToast();
 
   // Use the centralized auth context instead of local auth state
@@ -573,610 +582,403 @@ const Dashboard = () => {
 
   if (!user || !session) {
     return (
-      <div className="min-h-screen bg-gradient-primary flex items-center justify-center">
-        <div className="text-white text-lg">Carregando...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center font-jakarta">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          Carregando…
+        </div>
       </div>
     );
   }
 
+  const displayName = userProfile?.full_name || user?.user_metadata?.full_name || "Usuário";
+  const memberSince = userProfile?.created_at
+    ? new Date(userProfile.created_at).toLocaleDateString("pt-BR", { month: "long", year: "numeric" })
+    : null;
+  const points = userStats.activeVouchers * 100;
+
+  const NAV = [
+    { id: "vouchers", label: "Meus vouchers", icon: Ticket },
+    { id: "history", label: "Histórico", icon: History },
+    { id: "reservas", label: "Minhas reservas", icon: Building2, href: "/hospedagem/reservas" },
+    { id: "profile", label: "Dados pessoais", icon: UserIcon },
+  ];
+  const goTab = (item: (typeof NAV)[number]) => {
+    if (item.href) return navigate(item.href);
+    setActiveTab(item.id);
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set("aba", item.id === "profile" ? "perfil" : item.id === "history" ? "historico" : "vouchers");
+      window.history.replaceState(null, "", url.toString());
+    } catch {}
+  };
+
+  const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
+    active: { label: "Ativo", cls: "bg-[#e8f6ee] text-[#137a3f]" },
+    used: { label: "Utilizado", cls: "bg-[#f2f2f2] text-[#5c5c5c]" },
+    expired: { label: "Expirado", cls: "bg-[#fdecec] text-[#b4141a]" },
+  };
+
+  const VoucherRow = ({
+    title, subtitle, meta, price, status, code, onOpen,
+  }: { title: string; subtitle: string; meta: string; price: number; status: "active" | "used" | "expired"; code?: string; onOpen?: () => void }) => (
+    <li className={`rounded-2xl border border-[#ebebeb] bg-card p-4 md:p-5 ${status === "expired" ? "opacity-75" : ""}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${STATUS_STYLE[status].cls}`}>{STATUS_STYLE[status].label}</span>
+          <h3 className="m-0 mt-2 text-[15px] md:text-base font-bold leading-snug">{title}</h3>
+          <p className="m-0 mt-0.5 text-sm text-muted-foreground truncate">{subtitle}</p>
+        </div>
+        <span className={`shrink-0 text-base md:text-lg font-bold tabular-nums ${status === "active" ? "text-foreground" : "text-muted-foreground"}`}>{formatCurrency(price)}</span>
+      </div>
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#ebebeb] pt-3">
+        <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
+          <Calendar className="w-4 h-4" aria-hidden="true" />
+          {meta}
+          {code && <span className="font-mono ml-1">· {code}</span>}
+        </span>
+        {onOpen && (
+          <button type="button" onClick={onOpen} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90">
+            <QrCode className="w-4 h-4" aria-hidden="true" />
+            Ver QR Code
+          </button>
+        )}
+      </div>
+    </li>
+  );
+
+  const voucherCounts = {
+    active: getVouchersByStatus("active").length + getTicketBookingsByStatus("active").length,
+    used: getVouchersByStatus("used").length + getTicketBookingsByStatus("used").length,
+    expired: getVouchersByStatus("expired").length + getTicketBookingsByStatus("expired").length,
+  };
+  const EMPTY: Record<string, string> = {
+    active: "Você não possui vouchers ativos no momento.",
+    used: "Você ainda não utilizou nenhum voucher.",
+    expired: "Você não possui vouchers expirados.",
+  };
+  const renderVoucherList = (status: "active" | "used" | "expired") => {
+    const tickets = getTicketBookingsByStatus(status);
+    const vouchers = getVouchersByStatus(status);
+    if (isLoadingVouchers && status === "active") {
+      return (
+        <div className="py-12 flex items-center justify-center gap-2 text-muted-foreground">
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          Carregando vouchers…
+        </div>
+      );
+    }
+    if (tickets.length + vouchers.length === 0) {
+      return (
+        <div className="rounded-2xl border border-dashed border-[#dddddd] py-12 px-6 text-center">
+          <Ticket className="w-10 h-10 mx-auto text-muted-foreground/60" aria-hidden="true" />
+          <p className="m-0 mt-3 text-sm text-muted-foreground">{EMPTY[status]}</p>
+          {status === "active" && (
+            <button type="button" onClick={() => navigate("/")} className="mt-4 h-11 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground">
+              Explorar ofertas
+            </button>
+          )}
+        </div>
+      );
+    }
+    return (
+      <ul className="m-0 p-0 list-none grid gap-3 lg:grid-cols-2">
+        {tickets.map((b) => (
+          <VoucherRow
+            key={b.id}
+            status={status}
+            title={getTicketTitle(b)}
+            subtitle={b.establishment_name || "Ingresso"}
+            meta={status === "expired" ? (b.use_date ? `Expirou em ${formatDate(b.use_date)}` : "Expirado") : b.use_date ? `Uso em ${formatDate(b.use_date)}` : "Data confirmada"}
+            price={b.total_price}
+            code={status === "active" ? (b.localizador || b.voucher_id || b.id.slice(0, 8)) : undefined}
+            onOpen={status === "active" ? () => handleViewTicket(b) : undefined}
+          />
+        ))}
+        {vouchers.map((v) => (
+          <VoucherRow
+            key={v.id}
+            status={status}
+            title={getVoucherTitle(v)}
+            subtitle={getVoucherCompanyName(v)}
+            meta={status === "used" ? `Usado em ${v.used_at ? formatDate(v.used_at) : "—"}` : status === "expired" ? `Expirou em ${formatDate(v.expires_at)}` : `Válido até ${formatDate(v.expires_at)}`}
+            price={v.purchase_price}
+            onOpen={status === "active" ? () => handleViewVoucher(v) : undefined}
+          />
+        ))}
+      </ul>
+    );
+  };
+
+  const fieldCls = "h-12 rounded-xl border-[#dddddd] text-[15px]";
+  const lockedCls = `${fieldCls} bg-[#f7f7f7] text-muted-foreground cursor-not-allowed`;
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="bg-card shadow-[var(--shadow-card)] sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-[#fafafa] font-jakarta text-foreground pb-24 md:pb-0">
+      {/* Topo */}
+      <header className="sticky top-0 z-40 bg-card border-b border-[#ebebeb]">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <img 
-              src="/logo-desktop.png" 
-              alt="Bah Ofertas" 
-              className="h-10 w-auto"
-            />
+            <button
+              type="button"
+              onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+              aria-label="Voltar"
+              className="w-10 h-10 rounded-full border border-[#dddddd] flex items-center justify-center hover:bg-[#f7f7f7]"
+            >
+              <ChevronLeft className="w-5 h-5" aria-hidden="true" />
+            </button>
+            <button type="button" onClick={() => navigate("/")} aria-label="Bah Ofertas — página inicial">
+              <img src="/logo-desktop.png" alt="Bah Ofertas" className="h-9 md:h-10 w-auto" />
+            </button>
           </div>
-          
-          <Button variant="ghost" onClick={handleLogout} className="flex items-center gap-2 hover:bg-red-500 hover:text-white transition-colors duration-200">
-            <LogOut className="w-4 h-4" />
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex h-10 items-center gap-2 rounded-full border border-[#dddddd] px-4 text-sm font-semibold hover:border-primary hover:text-primary"
+          >
+            <LogOut className="w-4 h-4" aria-hidden="true" />
             Sair
-          </Button>
+          </button>
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Botão Voltar */}
-        <div className="mb-4">
-          <Button 
-            variant="destructive" 
-            onClick={() => navigate("/")}
-            className="flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Voltar
-          </Button>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <Card className="bg-card shadow-[var(--shadow-card)]">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center text-center mb-6">
-                  <div className="relative group">
-                    <Avatar className="w-20 h-20 mb-4">
-                      <AvatarImage src={userProfile?.profile_image_url || user?.user_metadata?.avatar_url} />
-                      <AvatarFallback className="text-lg font-semibold bg-primary text-white">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="absolute -bottom-1 -right-1 rounded-full w-8 h-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={isUploadingAvatar}
-                    >
-                      {isUploadingAvatar ? (
-                        <div className="w-3 h-3 border border-current border-t-transparent rounded-full animate-spin" />
-                      ) : (
-                        <Camera className="w-3 h-3" />
-                      )}
-                    </Button>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleAvatarUpload}
-                      className="hidden"
-                    />
-                  </div>
-                  <h3 className="font-semibold text-lg text-foreground">
-                    {userProfile?.full_name || user?.user_metadata?.full_name || "Usuário"}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">{user?.email}</p>
+      <main className="max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-8">
+        <div className="grid gap-5 lg:grid-cols-[300px_1fr] lg:gap-8 lg:items-start">
+          {/* Coluna do perfil */}
+          <aside className="space-y-4 lg:sticky lg:top-24">
+            <section className="rounded-2xl border border-[#ebebeb] bg-card p-5">
+              <div className="flex items-center gap-4 lg:flex-col lg:text-center">
+                <div className="relative shrink-0">
+                  <Avatar className="w-16 h-16 lg:w-24 lg:h-24">
+                    <AvatarImage src={userProfile?.profile_image_url || user?.user_metadata?.avatar_url} className="object-cover" />
+                    <AvatarFallback className="text-lg font-semibold bg-primary text-white">{getUserInitials()}</AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingAvatar}
+                    aria-label="Alterar foto"
+                    className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-card border border-[#dddddd] shadow-sm flex items-center justify-center hover:text-primary"
+                  >
+                    {isUploadingAvatar ? (
+                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4" aria-hidden="true" />
+                    )}
+                  </button>
+                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" />
                 </div>
-
-                <div className="space-y-4 mb-6">
-                  <div className="bg-gradient-to-r from-success/10 to-primary/10 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <DollarSign className="w-5 h-5 text-success" />
-                        <span className="text-sm font-medium">Economia Total</span>
-                      </div>
-                      <span className="text-lg font-bold text-success">
-                        {formatCurrency(userStats.totalSavings)}
-                      </span>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-primary/5 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-primary">{userStats.activeVouchers}</div>
-                      <div className="text-xs text-muted-foreground">Ativos</div>
-                    </div>
-                    <div className="bg-muted/50 p-3 rounded-lg text-center">
-                      <div className="text-2xl font-bold text-foreground">{userStats.usedVouchers}</div>
-                      <div className="text-xs text-muted-foreground">Usados</div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Pontos</span>
-                    <Badge variant="secondary" className="bg-warning/10 text-warning">
-                      {userStats.activeVouchers * 100}
-                    </Badge>
-                  </div>
+                <div className="min-w-0">
+                  <h1 className="m-0 text-lg lg:text-xl font-bold leading-tight truncate">{displayName}</h1>
+                  <p className="m-0 mt-0.5 text-sm text-muted-foreground truncate">{user?.email}</p>
+                  {memberSince && <p className="m-0 mt-1 text-xs text-muted-foreground">Membro desde {memberSince}</p>}
                 </div>
+              </div>
 
-                <nav className="space-y-2">
-                  <Button
-                    variant={activeTab === "vouchers" ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab("vouchers")}
-                  >
-                    <ShoppingCart className="w-4 h-4 mr-2" />
-                    Meus Vouchers
-                  </Button>
-                  <Button
-                    variant={activeTab === "history" ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab("history")}
-                  >
-                    <History className="w-4 h-4 mr-2" />
-                    Histórico
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start"
-                    onClick={() => navigate("/hospedagem/reservas")}
-                  >
-                    <Building2 className="w-4 h-4 mr-2" />
-                    Minhas Reservas
-                  </Button>
-                  <Button
-                    variant={activeTab === "profile" ? "default" : "ghost"}
-                    className="w-full justify-start"
-                    onClick={() => setActiveTab("profile")}
-                  >
-                    <UserIcon className="w-4 h-4 mr-2" />
-                    Perfil
-                  </Button>
-                </nav>
-              </CardContent>
-            </Card>
-          </div>
+              <div className="mt-5 rounded-xl bg-[#e8f6ee] px-4 py-3 flex items-center justify-between">
+                <span className="text-sm font-medium text-[#137a3f]">Você já economizou</span>
+                <span className="text-lg font-bold text-[#137a3f] tabular-nums">{formatCurrency(userStats.totalSavings)}</span>
+              </div>
+              <dl className="m-0 mt-3 grid grid-cols-3 gap-2 text-center">
+                {[
+                  { label: "Ativos", value: userStats.activeVouchers },
+                  { label: "Usados", value: userStats.usedVouchers },
+                  { label: "Pontos", value: points },
+                ].map((s) => (
+                  <div key={s.label} className="rounded-xl bg-[#f7f7f7] py-3">
+                    <dd className="m-0 text-xl font-bold tabular-nums">{s.value}</dd>
+                    <dt className="text-xs text-muted-foreground">{s.label}</dt>
+                  </div>
+                ))}
+              </dl>
+            </section>
 
-          {/* Main Content */}
-          <div className="lg:col-span-3">
+            {/* Navegação: pílulas roláveis no celular, lista no desktop */}
+            <nav aria-label="Minha conta" className="-mx-4 px-4 lg:mx-0 lg:px-0 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <ul className="m-0 p-0 list-none flex gap-2 lg:flex-col lg:gap-1 lg:rounded-2xl lg:border lg:border-[#ebebeb] lg:bg-card lg:p-2">
+                {NAV.map((item) => {
+                  const active = !item.href && activeTab === item.id;
+                  const Icon = item.icon;
+                  return (
+                    <li key={item.id} className="shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => goTab(item)}
+                        aria-current={active ? "page" : undefined}
+                        className={`w-full inline-flex items-center gap-2 h-11 rounded-full border px-4 text-sm font-semibold whitespace-nowrap transition-colors lg:rounded-xl lg:border-0 lg:h-12 ${
+                          active
+                            ? "bg-[#1f1f1f] border-[#1f1f1f] text-white lg:bg-primary/10 lg:text-primary"
+                            : "bg-card border-[#dddddd] text-foreground hover:border-[#1f1f1f] lg:hover:bg-[#f7f7f7]"
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" aria-hidden="true" />
+                        {item.label}
+                        {item.href && <ChevronRight className="hidden lg:block w-4 h-4 ml-auto text-muted-foreground" aria-hidden="true" />}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+          </aside>
+
+          {/* Conteúdo */}
+          <section className="min-w-0">
             {activeTab === "vouchers" && (
-              <Card className="bg-card shadow-[var(--shadow-card)]">
-                <CardHeader>
-                  <CardTitle>Meus Vouchers</CardTitle>
-                  <p className="text-muted-foreground">Gerencie seus vouchers ativos e histórico de compras</p>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="active" className="w-full">
-                    <TabsList className="grid w-full grid-cols-3">
-                      <TabsTrigger value="active">Ativos</TabsTrigger>
-                      <TabsTrigger value="used">Utilizados</TabsTrigger>
-                      <TabsTrigger value="expired">Expirados</TabsTrigger>
-                    </TabsList>
-                    
-                    <TabsContent value="active" className="space-y-4">
-                      {getTicketBookingsByStatus('active').map((booking) => (
-                        <Card key={booking.id} className="border-2 border-success">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{getTicketTitle(booking)}</h3>
-                                <p className="text-muted-foreground text-sm mb-2">{booking.establishment_name || 'Estabelecimento NovaXS'}</p>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>{booking.use_date ? `Uso em ${formatDate(booking.use_date)}` : 'Data confirmada'}</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2">
-                                  <span className="text-2xl font-bold text-primary">
-                                    {formatCurrency(booking.total_price)}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2 items-end">
-                                <Badge className="bg-success text-success-foreground hover:bg-success/90">Ativo</Badge>
-                                <p className="font-mono text-sm text-muted-foreground">
-                                  {booking.localizador || booking.voucher_id || booking.id.slice(0, 8)}
-                                </p>
-                                <Button size="sm" className="flex items-center gap-2" onClick={() => handleViewTicket(booking)}>
-                                  <QrCode className="w-4 h-4" />
-                                  Ver QR Code
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      {getVouchersByStatus('active').map((voucher) => (
-                        <Card key={voucher.id} className="border-l-4 border-l-success">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{getVoucherTitle(voucher)}</h3>
-                                <p className="text-muted-foreground text-sm mb-2">{getVoucherCompanyName(voucher)}</p>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <MapPin className="w-4 h-4" />
-                                    <span>Local disponível</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>Expira em {formatDate(voucher.expires_at)}</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2">
-                                  <span className="text-2xl font-bold text-success">
-                                    {formatCurrency(voucher.purchase_price)}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-2">
-                                <Badge className="bg-success text-white">
-                                  Ativo
-                                </Badge>
-                                <Button size="sm" className="flex items-center gap-2" onClick={() => handleViewVoucher(voucher)}>
-                                  <QrCode className="w-4 h-4" />
-                                  Ver QR Code
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                       {isLoadingVouchers ? (
-                        <div className="text-center py-8">
-                          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                          <p className="text-muted-foreground">Carregando vouchers...</p>
-                        </div>
-                      ) : getVouchersByStatus('active').length === 0 && getTicketBookingsByStatus('active').length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">Você não possui vouchers ativos no momento.</p>
-                          <Button className="mt-4" onClick={() => navigate("/")}>
-                            Explorar Ofertas
-                          </Button>
-                        </div>
-                      )}
+              <div>
+                <h2 className="m-0 text-xl md:text-2xl font-bold">Meus vouchers</h2>
+                <p className="m-0 mt-1 text-sm text-muted-foreground">Apresente o QR Code no estabelecimento para usar.</p>
+                <Tabs defaultValue="active" className="mt-4">
+                  <TabsList className="h-auto bg-transparent p-0 gap-2 flex-wrap justify-start">
+                    {(["active", "used", "expired"] as const).map((s) => (
+                      <TabsTrigger
+                        key={s}
+                        value={s}
+                        className="h-10 rounded-full border border-[#dddddd] bg-card px-4 text-sm font-semibold data-[state=active]:bg-[#1f1f1f] data-[state=active]:text-white data-[state=active]:border-[#1f1f1f] data-[state=active]:shadow-none"
+                      >
+                        {{ active: "Ativos", used: "Utilizados", expired: "Expirados" }[s]}
+                        <span className="ml-1.5 text-xs opacity-70">{voucherCounts[s]}</span>
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {(["active", "used", "expired"] as const).map((s) => (
+                    <TabsContent key={s} value={s} className="mt-4">
+                      {renderVoucherList(s)}
                     </TabsContent>
-                    
-                    <TabsContent value="used" className="space-y-4">
-                      {getTicketBookingsByStatus('used').map((booking) => (
-                        <Card key={booking.id} className="border-l-4 border-l-muted">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{getTicketTitle(booking)}</h3>
-                                <p className="text-muted-foreground text-sm mb-2">{booking.establishment_name || 'Estabelecimento NovaXS'}</p>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>{booking.use_date ? `Uso em ${formatDate(booking.use_date)}` : 'Data confirmada'}</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2">
-                                  <span className="text-2xl font-bold text-muted-foreground">{formatCurrency(booking.total_price)}</span>
-                                </div>
-                              </div>
-                              <Badge variant="secondary">Utilizado</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      {getVouchersByStatus('used').map((voucher) => (
-                        <Card key={voucher.id} className="border-l-4 border-l-muted">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{getVoucherTitle(voucher)}</h3>
-                                <p className="text-muted-foreground text-sm mb-2">{getVoucherCompanyName(voucher)}</p>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>Usado em {voucher.used_at ? formatDate(voucher.used_at) : 'N/A'}</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2">
-                                  <span className="text-2xl font-bold text-muted-foreground">
-                                    {formatCurrency(voucher.purchase_price)}
-                                  </span>
-                                </div>
-                              </div>
-                              <Badge variant="secondary">
-                                Utilizado
-                              </Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      {getVouchersByStatus('used').length === 0 && getTicketBookingsByStatus('used').length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">Você ainda não utilizou nenhum voucher.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-                    
-                    <TabsContent value="expired" className="space-y-4">
-                      {getTicketBookingsByStatus('expired').map((booking) => (
-                        <Card key={booking.id} className="border-l-4 border-l-destructive opacity-75">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{getTicketTitle(booking)}</h3>
-                                <p className="text-muted-foreground text-sm mb-2">{booking.establishment_name || 'Estabelecimento NovaXS'}</p>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>{booking.use_date ? `Expirou em ${formatDate(booking.use_date)}` : 'Expirado'}</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2">
-                                  <span className="text-2xl font-bold text-destructive">{formatCurrency(booking.total_price)}</span>
-                                </div>
-                              </div>
-                              <Badge variant="destructive">Expirado</Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      {getVouchersByStatus('expired').map((voucher) => (
-                        <Card key={voucher.id} className="border-l-4 border-l-destructive opacity-75">
-                          <CardContent className="p-4">
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                              <div className="flex-1">
-                                <h3 className="font-semibold text-lg">{getVoucherTitle(voucher)}</h3>
-                                <p className="text-muted-foreground text-sm mb-2">{getVoucherCompanyName(voucher)}</p>
-                                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="w-4 h-4" />
-                                    <span>Expirou em {formatDate(voucher.expires_at)}</span>
-                                  </div>
-                                </div>
-                                <div className="mt-2">
-                                  <span className="text-2xl font-bold text-destructive">
-                                    {formatCurrency(voucher.purchase_price)}
-                                  </span>
-                                </div>
-                              </div>
-                              <Badge variant="destructive">
-                                Expirado
-                              </Badge>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      {getVouchersByStatus('expired').length === 0 && getTicketBookingsByStatus('expired').length === 0 && (
-                        <div className="text-center py-8">
-                          <p className="text-muted-foreground">Você não possui vouchers expirados.</p>
-                        </div>
-                      )}
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
+                  ))}
+                </Tabs>
+              </div>
             )}
 
             {activeTab === "history" && (
-              <Card className="bg-card shadow-[var(--shadow-card)]">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <History className="w-5 h-5" />
-                    Histórico de Transações
-                  </CardTitle>
-                  <p className="text-muted-foreground">Acompanhe todas as suas compras e atividades</p>
-                </CardHeader>
-                <CardContent>
-                  {transactions.length > 0 ? (
-                    <div className="space-y-4">
-                      {transactions.map((transaction) => (
-                        <Card key={transaction.id} className="border-l-4 border-l-primary/50">
-                          <CardContent className="p-4">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <h4 className="font-semibold">{transaction.description || "Compra de Voucher"}</h4>
-                                <p className="text-sm text-muted-foreground">
-                                  {new Date(transaction.created_at).toLocaleDateString('pt-BR', {
-                                    day: '2-digit',
-                                    month: '2-digit',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  })}
-                                </p>
-                                {transaction.payment_method && (
-                                  <p className="text-sm text-muted-foreground">
-                                    Método: {transaction.payment_method}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <div className="text-lg font-bold text-primary">
-                                  {formatCurrency(transaction.amount)}
-                                </div>
-                                <Badge 
-                                  variant={transaction.status === 'completed' ? 'default' : 'secondary'}
-                                  className={
-                                    transaction.status === 'completed' 
-                                      ? 'bg-success text-white' 
-                                      : transaction.status === 'pending'
-                                      ? 'bg-warning text-white'
-                                      : 'bg-destructive text-white'
-                                  }
-                                >
-                                  {transaction.status === 'completed' ? 'Concluída' : 
-                                   transaction.status === 'pending' ? 'Pendente' : 'Cancelada'}
-                                </Badge>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                      
-                      {/* Summary Card */}
-                      <Card className="bg-gradient-to-r from-primary/5 to-secondary/5">
-                        <CardContent className="p-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <TrendingUp className="w-5 h-5 text-primary" />
-                              <span className="font-medium">Total Investido</span>
-                            </div>
-                            <span className="text-xl font-bold text-primary">
-                              {formatCurrency(transactions
-                                .filter(t => t.status === 'completed')
-                                .reduce((sum, t) => sum + Number(t.amount), 0))}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
+              <div>
+                <h2 className="m-0 text-xl md:text-2xl font-bold">Histórico</h2>
+                <p className="m-0 mt-1 text-sm text-muted-foreground">Suas compras e pagamentos.</p>
+                {transactions.length > 0 ? (
+                  <>
+                    <div className="mt-4 rounded-2xl border border-[#ebebeb] bg-card px-5 py-4 flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <TrendingUp className="w-4 h-4 text-primary" aria-hidden="true" />
+                        Total em compras concluídas
+                      </span>
+                      <span className="text-lg font-bold tabular-nums">
+                        {formatCurrency(transactions.filter((t) => t.status === "completed").reduce((sum, t) => sum + Number(t.amount), 0))}
+                      </span>
                     </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <History className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                      <p className="text-muted-foreground">Nenhuma transação encontrada.</p>
-                      <Button className="mt-4" onClick={() => navigate("/")}>
-                        Explorar Ofertas
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <ul className="m-0 mt-3 p-0 list-none rounded-2xl border border-[#ebebeb] bg-card divide-y divide-[#ebebeb]">
+                      {transactions.map((t) => {
+                        const st =
+                          t.status === "completed"
+                            ? { label: "Concluída", cls: "bg-[#e8f6ee] text-[#137a3f]" }
+                            : t.status === "pending"
+                              ? { label: "Pendente", cls: "bg-[#fff6e0] text-[#8a5a00]" }
+                              : { label: "Cancelada", cls: "bg-[#fdecec] text-[#b4141a]" };
+                        return (
+                          <li key={t.id} className="flex items-start justify-between gap-3 px-4 py-4 md:px-5">
+                            <div className="min-w-0">
+                              <p className="m-0 text-[15px] font-semibold leading-snug">{t.description || "Compra de voucher"}</p>
+                              <p className="m-0 mt-0.5 text-[13px] text-muted-foreground">
+                                {new Date(t.created_at).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                                {t.payment_method ? ` · ${t.payment_method}` : ""}
+                              </p>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <p className="m-0 text-[15px] font-bold tabular-nums">{formatCurrency(t.amount)}</p>
+                              <span className={`mt-1 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${st.cls}`}>{st.label}</span>
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </>
+                ) : (
+                  <div className="mt-4 rounded-2xl border border-dashed border-[#dddddd] py-12 px-6 text-center">
+                    <History className="w-10 h-10 mx-auto text-muted-foreground/60" aria-hidden="true" />
+                    <p className="m-0 mt-3 text-sm text-muted-foreground">Nenhuma compra por aqui ainda.</p>
+                    <button type="button" onClick={() => navigate("/")} className="mt-4 h-11 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground">
+                      Explorar ofertas
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             {activeTab === "profile" && (
-              <Card className="bg-card shadow-[var(--shadow-card)]">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <UserIcon className="w-5 h-5" />
-                    Meu Perfil
-                  </CardTitle>
-                  <p className="text-muted-foreground">Gerencie suas informações pessoais</p>
-                </CardHeader>
-                <CardContent>
-                  {userProfile ? (
-                    <form onSubmit={(e) => {
+              <div>
+                <h2 className="m-0 text-xl md:text-2xl font-bold">Dados pessoais</h2>
+                <p className="m-0 mt-1 text-sm text-muted-foreground">Usados nas suas compras e reservas.</p>
+                {userProfile ? (
+                  <form
+                    onSubmit={(e) => {
                       e.preventDefault();
-                      const formData = new FormData(e.currentTarget);
-                      handleUpdateProfile(formData);
-                    }} className="space-y-6">
-                      {/* Avatar Section */}
-                      <div className="flex flex-col items-center space-y-4">
-                        <div className="relative group">
-                          <Avatar className="w-24 h-24">
-                            <AvatarImage src={userProfile?.profile_image_url || user?.user_metadata?.avatar_url} />
-                            <AvatarFallback className="text-2xl font-semibold bg-primary text-white">
-                              {getUserInitials()}
-                            </AvatarFallback>
-                          </Avatar>
-                          <Button
-                            type="button"
-                            size="sm"
-                            variant="secondary"
-                            className="absolute -bottom-2 -right-2 rounded-full w-10 h-10 p-0"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isUploadingAvatar}
-                          >
-                            {isUploadingAvatar ? (
-                              <div className="w-4 h-4 border border-current border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <Camera className="w-4 h-4" />
-                            )}
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground text-center">
-                          Clique no ícone da câmera para alterar sua foto
-                        </p>
+                      handleUpdateProfile(new FormData(e.currentTarget));
+                    }}
+                    className="mt-4 rounded-2xl border border-[#ebebeb] bg-card p-5 md:p-6"
+                  >
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="full_name">Nome completo</Label>
+                        <Input id="full_name" name="full_name" defaultValue={userProfile.full_name} required readOnly disabled className={lockedCls} />
                       </div>
-
-                      <Separator />
-
-                      {/* Personal Information */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="full_name">Nome Completo</Label>
-                          <Input
-                            id="full_name"
-                            name="full_name"
-                            defaultValue={userProfile.full_name}
-                            required
-                            readOnly
-                            disabled
-                            className="bg-muted cursor-not-allowed"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="email">E-mail</Label>
-                          <Input
-                            id="email"
-                            value={userProfile.email}
-                            disabled
-                            className="bg-muted"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">Telefone</Label>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            defaultValue={userProfile.phone || ''}
-                            placeholder="(00) 00000-0000"
-                          />
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="cpf">CPF</Label>
-                          <Input
-                            id="cpf"
-                            name="cpf"
-                            defaultValue={userProfile.cpf || ''}
-                            placeholder="000.000.000-00"
-                            readOnly
-                            disabled
-                            className="bg-muted cursor-not-allowed"
-                          />
-                        </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="email">E-mail</Label>
+                        <Input id="email" value={userProfile.email} disabled className={lockedCls} />
                       </div>
-
-                      <Separator />
-
-                      {/* Account Information */}
-                      <div className="space-y-4">
-                        <h3 className="text-lg font-semibold">Informações da Conta</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label>Data de Cadastro</Label>
-                            <div className="p-2 bg-muted rounded-md">
-                              {new Date(userProfile.created_at).toLocaleDateString('pt-BR')}
-                            </div>
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Status da Conta</Label>
-                            <div className="p-2 bg-muted rounded-md flex items-center gap-2">
-                              <div className="w-2 h-2 bg-success rounded-full"></div>
-                              Ativa
-                            </div>
-                          </div>
-                        </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="phone">Telefone</Label>
+                        <Input id="phone" name="phone" type="tel" inputMode="tel" autoComplete="tel" defaultValue={userProfile.phone || ""} placeholder="(00) 00000-0000" className={fieldCls} />
                       </div>
-
-                      {/* Action Buttons */}
-                      <div className="flex gap-3 pt-4">
-                        <Button 
-                          type="submit" 
-                          disabled={isUpdatingProfile}
-                          className="flex-1"
-                        >
-                          {isUpdatingProfile ? (
-                            <div className="flex items-center gap-2">
-                              <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                              Salvando...
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-2">
-                              <Edit3 className="w-4 h-4" />
-                              Salvar Alterações
-                            </div>
-                          )}
-                        </Button>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="cpf">CPF</Label>
+                        <Input id="cpf" name="cpf" defaultValue={userProfile.cpf || ""} placeholder="000.000.000-00" readOnly disabled className={lockedCls} />
                       </div>
-                    </form>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                      <p className="text-muted-foreground">Carregando informações...</p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                    <p className="m-0 mt-3 text-xs text-muted-foreground">Nome, e-mail e CPF não podem ser alterados por aqui. Precisa corrigir? Fale com a gente pelo WhatsApp.</p>
+
+                    <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[#ebebeb] pt-5 text-sm">
+                      <div>
+                        <span className="block text-xs text-muted-foreground">Cadastro</span>
+                        <span className="font-semibold">{new Date(userProfile.created_at).toLocaleDateString("pt-BR")}</span>
+                      </div>
+                      <div>
+                        <span className="block text-xs text-muted-foreground">Status da conta</span>
+                        <span className="inline-flex items-center gap-1.5 font-semibold">
+                          <span className="w-2 h-2 rounded-full bg-[#1f9d55]" aria-hidden="true" />
+                          Ativa
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+                      <button type="button" onClick={handleLogout} className="h-12 rounded-xl border border-[#dddddd] px-5 text-[15px] font-semibold inline-flex items-center justify-center gap-2 hover:border-primary hover:text-primary">
+                        <LogOut className="w-4 h-4" aria-hidden="true" />
+                        Sair da conta
+                      </button>
+                      <button type="submit" disabled={isUpdatingProfile} className="h-12 rounded-xl bg-primary px-6 text-[15px] font-semibold text-primary-foreground inline-flex items-center justify-center gap-2 disabled:opacity-60">
+                        {isUpdatingProfile ? (
+                          <>
+                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            Salvando…
+                          </>
+                        ) : (
+                          "Salvar alterações"
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="py-12 flex items-center justify-center gap-2 text-muted-foreground">
+                    <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    Carregando informações…
+                  </div>
+                )}
+              </div>
             )}
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
+
+      <HomeBottomNav />
 
       {/* Voucher Modal */}
       <Dialog open={isVoucherModalOpen} onOpenChange={setIsVoucherModalOpen}>
