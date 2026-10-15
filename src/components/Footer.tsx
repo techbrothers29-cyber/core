@@ -2,6 +2,7 @@ import { Facebook, Instagram, Twitter, Mail, MessageCircle, MapPin } from "lucid
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import logoDesktop from "@/assets/logo-desktop.png";
 
 type FooterLink = { title: string; href: string };
 
@@ -67,7 +68,10 @@ const Footer = () => {
       .in("key", ["facebook_url", "instagram_url", "twitter_url"])
       .then(({ data }) => {
         if (!active || !data) return;
-        const get = (k: string) => (data.find((d) => d.key === k)?.value as string) || undefined;
+        const get = (k: string) => {
+          const v = data.find((d) => d.key === k)?.value as string | undefined;
+          return isRealProfile(v) ? v : undefined;
+        };
         setSocialUrls({
           facebook: get("facebook_url"),
           instagram: get("instagram_url") || "https://instagram.com/bahofertas.rs",
@@ -93,13 +97,13 @@ const Footer = () => {
           <div className="pb-6 md:pb-8">
             <Link to="/" aria-label="Bah Ofertas — início" className="inline-block">
               <img
-                src="/lovable-uploads/878abd68-logo-280.png"
+                src={logoDesktop}
                 alt="Bah Ofertas"
-                width={280}
-                height={280}
+                width={200}
+                height={80}
                 loading="lazy"
                 decoding="async"
-                className="h-14 w-auto"
+                className="h-12 md:h-14 w-auto"
               />
             </Link>
             <p className="m-0 mt-3 max-w-xs text-sm leading-relaxed text-[#6b6b6b]">
