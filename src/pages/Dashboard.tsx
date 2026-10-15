@@ -714,7 +714,7 @@ const Dashboard = () => {
   const lockedCls = `${fieldCls} bg-[#f7f7f7] text-muted-foreground cursor-not-allowed`;
 
   return (
-    <div className="min-h-screen bg-[#fafafa] font-jakarta text-foreground pb-24 md:pb-0">
+    <div className="min-h-screen overflow-x-hidden bg-[#fafafa] font-jakarta text-foreground pb-24 md:pb-0">
       {/* Topo */}
       <header className="sticky top-0 z-40 bg-card border-b border-[#ebebeb]">
         <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between gap-3">
@@ -743,9 +743,9 @@ const Dashboard = () => {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 md:px-6 py-5 md:py-8">
-        <div className="grid gap-5 lg:grid-cols-[300px_1fr] lg:gap-8 lg:items-start">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[300px_minmax(0,1fr)] lg:gap-8 lg:items-start">
           {/* Coluna do perfil */}
-          <aside className="space-y-4 lg:sticky lg:top-24">
+          <aside className="min-w-0 space-y-4 lg:sticky lg:top-24">
             <section className="rounded-2xl border border-[#ebebeb] bg-card p-5">
               <div className="flex items-center gap-4 lg:flex-col lg:text-center">
                 <div className="relative shrink-0">
