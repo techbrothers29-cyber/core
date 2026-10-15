@@ -363,6 +363,21 @@ const Hospedagem = () => {
     if (idle) idle(load);
     else setTimeout(load, 1500);
   }, [mapAvailable]);
+
+  // Celular: o mapa é montado escondido logo após os resultados (em momento ocioso) e fica montado,
+  // então o botão "Mapa" só troca a visibilidade — abre na hora, sem recriar o mapa a cada toque.
+  const [mobileMapMounted, setMobileMapMounted] = useState(false);
+  useEffect(() => {
+    if (!isMobile || !mapAvailable || isLoading || mobileMapMounted) return;
+    const idle = (window as any).requestIdleCallback as ((cb: () => void, o?: object) => number) | undefined;
+    const mount = () => setMobileMapMounted(true);
+    const id = idle ? idle(mount, { timeout: 4000 }) : window.setTimeout(mount, 2000);
+    return () => {
+      const cancel = (window as any).cancelIdleCallback as ((id: number) => void) | undefined;
+      if (idle && cancel) cancel(id);
+      else window.clearTimeout(id);
+    };
+  }, [isMobile, mapAvailable, isLoading, mobileMapMounted]);
   const desktopMapVisible = !isMobile && showMap && mapAvailable;
   const mobileMapVisible = isMobile && mobileView === "map" && mapAvailable && !isLoading;
   const showMobileInlineSearch = hotels.length === 0 && !isLoading;
@@ -413,11 +428,19 @@ const Hospedagem = () => {
         </div>
       );
     }
-    if (mobileMapVisible) {
-      return renderMap("rounded-2xl h-[calc(100dvh-250px)] min-h-[320px]");
-    }
+    const mobileMap = isMobile && mapAvailable && (mobileMapMounted || mobileMapVisible) ? (
+      <div
+        aria-hidden={!mobileMapVisible}
+        inert={!mobileMapVisible ? ("" as any) : undefined}
+        className={mobileMapVisible ? "" : "fixed inset-x-4 top-0 -z-10 opacity-0 pointer-events-none"}
+      >
+        {renderMap("rounded-2xl h-[calc(100dvh-250px)] min-h-[320px]")}
+      </div>
+    ) : null;
     return (
-      <ul className="m-0 p-0 list-none flex flex-col gap-6 md:gap-4">
+      <>
+      {mobileMap}
+      <ul className={`m-0 p-0 list-none flex flex-col gap-6 md:gap-4 ${mobileMapVisible ? "hidden" : ""}`}>
         {filteredHotels.map((hotel, index) => (
           <li key={hotel.id}>
             <HotelResultCard
@@ -428,6 +451,7 @@ const Hospedagem = () => {
           </li>
         ))}
       </ul>
+      </>
     );
   };
 
