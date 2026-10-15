@@ -1,144 +1,112 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  User,
-  Shield,
-  Store,
-  Users,
-  ShoppingCart,
-  ArrowRight
-} from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { User, Shield, Store, Users, ArrowRight, ChevronRight, type LucideIcon } from "lucide-react";
+import AuthShell, { AUTH_CONTAINER } from "@/components/auth/redesign/AuthShell";
 
 interface LoginOption {
   title: string;
   description: string;
-  icon: React.ReactNode;
+  icon: LucideIcon;
   route: string;
   badge?: string;
-  color: string;
 }
 
+const loginOptions: LoginOption[] = [
+  {
+    title: "Usuário / Cliente",
+    description: "Acesse ofertas e gerencie seus vouchers",
+    icon: User,
+    route: "/auth",
+    badge: "Público",
+  },
+  {
+    title: "Afiliado",
+    description: "Ganhe comissões promovendo ofertas",
+    icon: Users,
+    route: "/afiliado/auth",
+    badge: "Programa",
+  },
+  {
+    title: "Parceiro",
+    description: "Gerencie seu estabelecimento e ofertas",
+    icon: Store,
+    route: "/parceiro/login",
+    badge: "Empresa",
+  },
+  {
+    title: "Administrador",
+    description: "Controle total da plataforma",
+    icon: Shield,
+    route: "/admin/login",
+    badge: "Sistema",
+  },
+];
+
+const FOCUS_RING = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2";
+
 const LoginTypeSelector = () => {
-  const navigate = useNavigate();
-
-  const loginOptions: LoginOption[] = [
-    {
-      title: "Usuário / Cliente",
-      description: "Acesse ofertas e gerencie seus vouchers",
-      icon: <User className="w-8 h-8" />,
-      route: "/auth",
-      badge: "Público",
-      color: "bg-blue-500"
-    },
-    {
-      title: "Afiliado",
-      description: "Ganhe comissões promovendo ofertas",
-      icon: <Users className="w-8 h-8" />,
-      route: "/afiliado/auth",
-      badge: "Programa",
-      color: "bg-green-500"
-    },
-    {
-      title: "Parceiro",
-      description: "Gerencie seu estabelecimento e ofertas",
-      icon: <Store className="w-8 h-8" />,
-      route: "/parceiro/login",
-      badge: "Empresa",
-      color: "bg-purple-500"
-    },
-    {
-      title: "Administrador",
-      description: "Controle total da plataforma",
-      icon: <Shield className="w-8 h-8" />,
-      route: "/admin/login",
-      badge: "Sistema",
-      color: "bg-red-500"
-    }
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90 flex items-center justify-center p-4">
-      <div className="w-full max-w-4xl">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="relative">
-              <img
-                src="/lovable-uploads/4df8089b-e46d-449e-b42e-4ec8daedc049.png"
-                alt="Bah Ofertas"
-                className="h-16 w-auto drop-shadow-2xl"
-              />
-              <div className="absolute inset-0 bg-destructive/20 blur-xl scale-110 -z-10" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Escolha seu tipo de acesso</h1>
-          <p className="text-muted-foreground text-lg">Selecione a categoria que corresponde ao seu perfil</p>
-        </div>
-
-        {/* Options Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {loginOptions.map((option, index) => (
-            <Card
-              key={index}
-              className="relative overflow-hidden group hover:shadow-2xl transition-all duration-300 hover:scale-105 cursor-pointer"
-              onClick={() => navigate(option.route)}
-            >
-              <div className={`absolute inset-0 ${option.color} opacity-5 group-hover:opacity-10 transition-opacity`} />
-
-              <CardHeader className="text-center relative">
-                {option.badge && (
-                  <Badge
-                    className={`absolute top-2 right-2 ${option.color} text-white text-xs`}
-                  >
-                    {option.badge}
-                  </Badge>
-                )}
-
-                <div className={`w-16 h-16 rounded-full ${option.color} flex items-center justify-center mx-auto mb-4 text-white group-hover:scale-110 transition-transform`}>
-                  {option.icon}
-                </div>
-
-                <CardTitle className="text-lg font-bold text-center mb-2">
-                  {option.title}
-                </CardTitle>
-              </CardHeader>
-
-              <CardContent className="text-center pb-6">
-                <p className="text-muted-foreground text-sm mb-4 min-h-[2.5rem] flex items-center justify-center">
-                  {option.description}
-                </p>
-
-                <Button
-                  className={`w-full ${option.color} hover:${option.color}/90 text-white group-hover:gap-3 transition-all`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(option.route);
-                  }}
-                >
-                  Acessar
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-12">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <ShoppingCart className="w-5 h-5 text-primary" />
-            <span className="text-sm text-muted-foreground">
-              Cada tipo de usuário tem acesso exclusivo à sua área específica
-            </span>
-          </div>
-          <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-            ✓ Segurança garantida • ✓ Acesso controlado por perfil • ✓ Suporte personalizado
+    <AuthShell>
+      <div className={`${AUTH_CONTAINER} pb-12 pt-6 md:pt-12`}>
+        <div className="md:text-center">
+          <h1 className="text-[26px] font-bold leading-tight text-foreground md:text-[32px] md:font-extrabold">
+            Escolha seu tipo de acesso
+          </h1>
+          <p className="mt-1.5 text-[15px] text-[#6b6b6b] dark:text-muted-foreground md:text-base">
+            Selecione a categoria que corresponde ao seu perfil
           </p>
         </div>
+
+        {/* Celular: lista com ícone em círculo de borda fina e divisórias */}
+        <ul className="md:hidden mt-5 border-b border-[#ebebeb] dark:border-border">
+          {loginOptions.map(({ title, description, icon: Icon, route }) => (
+            <li key={route} className="border-t border-[#ebebeb] dark:border-border">
+              <Link to={route} className={`flex items-center gap-4 rounded-lg py-[18px] ${FOCUS_RING}`}>
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#dddddd] dark:border-border text-foreground">
+                  <Icon className="h-[22px] w-[22px]" strokeWidth={1.8} aria-hidden="true" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-base font-semibold text-foreground">{title}</span>
+                  <span className="mt-0.5 block text-[13px] text-[#6b6b6b] dark:text-muted-foreground">{description}</span>
+                </span>
+                <ChevronRight className="h-[18px] w-[18px] shrink-0 text-[#6b6b6b]" strokeWidth={1.8} aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        {/* Tablet/desktop: cartões lado a lado */}
+        <ul className="hidden md:grid mt-9 grid-cols-2 gap-5 lg:grid-cols-4">
+          {loginOptions.map(({ title, description, icon: Icon, route, badge }) => (
+            <li key={route} className="min-w-0">
+              <Link
+                to={route}
+                className={`group relative flex h-full flex-col items-center rounded-2xl border border-[#dddddd] dark:border-border bg-card px-5 pb-5 pt-8 text-center shadow-[0_6px_20px_rgba(0,0,0,0.08)] transition-shadow hover:shadow-[0_10px_28px_rgba(0,0,0,0.14)] ${FOCUS_RING}`}
+              >
+                {badge && (
+                  <span className="absolute right-3 top-3 rounded-full bg-[#f7f7f7] dark:bg-muted px-2.5 py-0.5 text-xs font-semibold text-[#5f5f5f] dark:text-muted-foreground">
+                    {badge}
+                  </span>
+                )}
+                <span className="flex h-16 w-16 items-center justify-center rounded-full border border-[#dddddd] dark:border-border text-foreground transition-colors group-hover:border-primary group-hover:text-primary">
+                  <Icon className="h-7 w-7" strokeWidth={1.8} aria-hidden="true" />
+                </span>
+                <span className="mt-4 text-lg font-bold text-foreground">{title}</span>
+                <span className="mt-1.5 mb-5 text-sm text-[#6b6b6b] dark:text-muted-foreground">{description}</span>
+                <span className="mt-auto flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary text-sm font-semibold text-primary-foreground transition-colors group-hover:bg-primary/90">
+                  Acessar
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+
+        <div className="mt-6 text-xs leading-relaxed text-[#6b6b6b] dark:text-muted-foreground md:mt-10 md:text-center">
+          <p className="md:text-sm">Cada tipo de usuário tem acesso exclusivo à sua área específica</p>
+          <p className="mt-1 md:mt-2">Segurança garantida • Acesso controlado por perfil • Suporte personalizado</p>
+        </div>
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

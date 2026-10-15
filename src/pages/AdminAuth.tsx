@@ -1,10 +1,9 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { Shield, Settings, BarChart3 } from "lucide-react";
+import { Shield } from "lucide-react";
+import AuthShell from "@/components/auth/redesign/AuthShell";
+import AuthCard, { AuthSubmitButton } from "@/components/auth/redesign/AuthCard";
+import AuthField, { AuthFieldGroup } from "@/components/auth/redesign/AuthField";
 import { useToast } from "@/components/ui/use-toast";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { adminLoginSchema, formatValidationErrors } from "@/lib/validation";
@@ -60,58 +59,39 @@ const AdminAuth = () => {
   // or through a secure backend process with proper authorization.
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <Shield className="h-16 w-16 text-primary" />
+    <AuthShell mobileTitle="Área administrativa">
+      <div className="mx-auto w-full max-w-[460px] px-5 pb-12 pt-10 md:px-0 md:pt-16">
+        <div className="text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#fff1f1] dark:bg-primary/10">
+            <Shield className="h-8 w-8 text-primary" strokeWidth={1.8} aria-hidden="true" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Painel Administrativo</h1>
-          <p className="text-muted-foreground">
+          <h1 className="mt-4 text-2xl font-bold leading-tight text-foreground md:text-[28px] md:font-extrabold">
+            Painel Administrativo
+          </h1>
+          <p className="mt-1.5 text-sm text-[#6b6b6b] dark:text-muted-foreground md:text-[15px]">
             Área restrita para administradores do sistema
           </p>
         </div>
 
-        <Card className="shadow-lg border-0 bg-card/80 backdrop-blur">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-center text-xl">Acesso Administrativo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">E-mail</Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="••••••••"
-                  minLength={8}
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading || loading}>
+        <div className="mt-7">
+          <AuthCard id="admin-login" title="Acesso Administrativo" hideTitleOnMobile>
+            <form onSubmit={handleLogin}>
+              <AuthFieldGroup>
+                <AuthField id="email" name="email" type="email" label="E-mail" autoComplete="email" required />
+                <AuthField id="password" name="password" type="password" label="Senha" placeholder="••••••••" autoComplete="current-password" minLength={8} required />
+              </AuthFieldGroup>
+              <AuthSubmitButton disabled={isLoading || loading}>
                 {isLoading || loading ? "Entrando..." : "Acessar Painel"}
-              </Button>
+              </AuthSubmitButton>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Footer */}
-        <div className="text-center mt-8 text-xs text-muted-foreground">
-          <p>Sistema restrito - Acesso autorizado apenas</p>
+          </AuthCard>
         </div>
+
+        <p className="mt-6 text-center text-xs text-[#6b6b6b] dark:text-muted-foreground">
+          Sistema restrito - Acesso autorizado apenas
+        </p>
       </div>
-    </div>
+    </AuthShell>
   );
 };
 

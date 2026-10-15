@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { loginSchema, signUpSchema, formatValidationErrors } from "@/lib/validation";
-import AuthLayout from "@/components/auth/AuthLayout";
+import AuthSplitLayout from "@/components/auth/redesign/AuthSplitLayout";
+import AuthField, { AuthFieldGroup } from "@/components/auth/redesign/AuthField";
+import { AuthSubmitButton, AuthTextButton } from "@/components/auth/redesign/AuthCard";
 import SocialLoginButtons from "@/components/auth/SocialLoginButtons";
 import ForgotPasswordDialog from "@/components/auth/ForgotPasswordDialog";
 import { getEffectiveUserAccess } from "@/lib/user-role";
@@ -162,85 +161,54 @@ const Auth = () => {
   };
 
   const loginForm = (
-    <form onSubmit={handleLogin} className="space-y-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="login-email" className="text-foreground font-medium text-sm">E-mail</Label>
-        <Input id="login-email" name="email" type="email" placeholder="seu@email.com" required className="h-10 border-2 border-border focus:border-destructive/50 transition-all duration-300 bg-background/50" />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="login-password" className="text-foreground font-medium text-sm">Senha</Label>
-        <Input id="login-password" name="password" type="password" placeholder="••••••••" required className="h-10 border-2 border-border focus:border-destructive/50 transition-all duration-300 bg-background/50" />
-      </div>
-      <Button type="submit" className="w-full h-10 bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive/80 text-destructive-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-0" disabled={isLoading || loading}>
+    <form onSubmit={handleLogin}>
+      <AuthFieldGroup>
+        <AuthField id="login-email" name="email" type="email" label="E-mail" placeholder="seu@email.com" autoComplete="email" required />
+        <AuthField id="login-password" name="password" type="password" label="Senha" placeholder="••••••••" autoComplete="current-password" required />
+      </AuthFieldGroup>
+      <AuthSubmitButton disabled={isLoading || loading}>
         {isLoading || loading ? "Entrando..." : "Entrar"}
-      </Button>
-      <div className="text-center">
-        <button
-          type="button"
-          onClick={() => setForgotOpen(true)}
-          className="text-xs text-muted-foreground hover:text-destructive transition-colors underline-offset-2 hover:underline"
-        >
-          Esqueci minha senha
-        </button>
-      </div>
-      <SocialLoginButtons isLoading={isLoading} />
+      </AuthSubmitButton>
+      <AuthTextButton onClick={() => setForgotOpen(true)}>Esqueci minha senha</AuthTextButton>
+      <SocialLoginButtons isLoading={isLoading} variant="redesign" />
     </form>
   );
 
   const signupForm = (
-    <form onSubmit={handleSignUp} className="space-y-3">
-      <div className="space-y-1">
-        <Label htmlFor="signup-name" className="text-foreground font-medium text-sm">Nome completo</Label>
-        <Input id="signup-name" name="fullName" type="text" placeholder="Seu nome completo" required className="h-9 border-2 border-border focus:border-destructive/50 transition-all bg-background/50" />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="signup-cpf" className="text-foreground font-medium text-sm">CPF</Label>
-        <Input id="signup-cpf" name="cpf" type="text" placeholder="000.000.000-00" required maxLength={14} className="h-9 border-2 border-border focus:border-destructive/50 transition-all bg-background/50" />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="signup-email" className="text-foreground font-medium text-sm">E-mail</Label>
-        <Input id="signup-email" name="email" type="email" placeholder="seu@email.com" required className="h-9 border-2 border-border focus:border-destructive/50 transition-all bg-background/50" />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="signup-phone" className="text-foreground font-medium text-sm">Telefone</Label>
-        <Input id="signup-phone" name="phone" type="tel" placeholder="(11) 99999-9999" required maxLength={15} className="h-9 border-2 border-border focus:border-destructive/50 transition-all bg-background/50" />
-      </div>
-      <div className="space-y-1">
-        <Label htmlFor="signup-password" className="text-foreground font-medium text-sm">Senha</Label>
-<Input id="signup-password" name="password" type="password" placeholder="Mín. 8 dígitos" minLength={8} required className="h-9 border-2 border-border focus:border-destructive/50 transition-all bg-background/50" />
-      </div>
-      <Button type="submit" className="w-full h-10 bg-gradient-to-r from-destructive to-destructive/90 hover:from-destructive/90 hover:to-destructive/80 text-destructive-foreground font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 border-0" disabled={isLoading}>
+    <form onSubmit={handleSignUp}>
+      <AuthFieldGroup>
+        <AuthField id="signup-name" name="fullName" type="text" label="Nome completo" placeholder="Seu nome completo" autoComplete="name" required />
+        <AuthField id="signup-cpf" name="cpf" type="text" label="CPF" placeholder="000.000.000-00" autoComplete="off" required maxLength={14} />
+        <AuthField id="signup-email" name="email" type="email" label="E-mail" placeholder="seu@email.com" autoComplete="email" required />
+        <AuthField id="signup-phone" name="phone" type="tel" label="Telefone" placeholder="(11) 99999-9999" autoComplete="tel" required maxLength={15} />
+        <AuthField id="signup-password" name="password" type="password" label="Senha" placeholder="Mín. 8 dígitos" autoComplete="new-password" minLength={8} required />
+      </AuthFieldGroup>
+      <AuthSubmitButton disabled={isLoading}>
         {isLoading ? "Cadastrando..." : "Cadastrar"}
-      </Button>
-      <SocialLoginButtons isLoading={isLoading} />
+      </AuthSubmitButton>
+      {/* No desktop o Google já aparece no cartão "Entrar", ao lado; no celular cada aba tem o seu. */}
+      <div className="md:hidden">
+        <SocialLoginButtons isLoading={isLoading} variant="redesign" />
+      </div>
     </form>
   );
 
   return (
     <>
-      <AuthLayout
+      <AuthSplitLayout
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        hero={{
+          title: "Bah! Você aqui novamente",
+          subtitle: "Vamos iniciar o seu cadastro e começar a melhor experiência para sua viagem",
+        }}
         loginForm={loginForm}
         signupForm={signupForm}
-        accentColor="destructive"
-        logoSrc="/logo-desktop.png"
-        logoAlt="Bah Ofertas"
-        loginCta={{
-          title: "Bah!\nVocê aqui novamente",
-          subtitle: "Vamos iniciar o seu cadastro e começar a melhor experiência para sua viagem",
-          buttonText: "Cadastrar",
-        }}
-        signupCta={{
-          title: "Bem-vindo de volta!",
-          subtitle: "Entre com suas credenciais para acessar suas ofertas e vouchers",
-          buttonText: "Entrar",
-        }}
       />
       <ForgotPasswordDialog
         open={forgotOpen}
         onOpenChange={setForgotOpen}
-        accentColor="destructive"
+        accentColor="primary"
         portal="cliente"
       />
     </>
