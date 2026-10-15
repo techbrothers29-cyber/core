@@ -19,7 +19,8 @@ const SecondaryFeaturedSection = memo(() => {
   const [mobileApi, setMobileApi] = useState<CarouselApi>();
   const [desktopApi, setDesktopApi] = useState<CarouselApi>();
   const [showAllItems, setShowAllItems] = useState(false);
-  const { selectedDate } = useSelectedDate();
+  // Monta depois da busca da Home: mantém a data já escolhida pelo visitante.
+  const { selectedDate } = useSelectedDate({ resetOnMount: false });
   const { restaurantEstablishments: allRestaurants, loading } = useNovaxsEstablishments(selectedDate, { enableFallbackAvailability: true });
   const { establishments: bahEstablishments, loading: bahLoading } = useBahofertasPartners();
 

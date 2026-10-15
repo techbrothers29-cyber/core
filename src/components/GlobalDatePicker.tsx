@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -86,9 +86,20 @@ export function GlobalDatePicker({ selectedDate, onDateChange }: GlobalDatePicke
   );
 }
 
-export function useSelectedDate() {
+interface UseSelectedDateOptions {
+  /**
+   * Padrão `true` (comportamento original): ao montar, volta a data para "hoje".
+   * Use `false` em blocos que montam depois do resto da página (ex.: carrosséis
+   * carregados sob demanda na Home), para não apagar a data que o visitante já
+   * escolheu na busca. A troca de rota continua voltando para "hoje".
+   */
+  resetOnMount?: boolean;
+}
+
+export function useSelectedDate({ resetOnMount = true }: UseSelectedDateOptions = {}) {
   const [selectedDate, setSelectedDateState] = useState<Date>(getInitialDate);
   const location = useLocation();
+  const skipFirstResetRef = useRef(!resetOnMount);
 
   const setSelectedDate = (date: Date) => {
     setSelectedDateState(date);
@@ -104,6 +115,10 @@ export function useSelectedDate() {
 
   // Reset to "today" whenever the route changes (SPA navigation).
   useEffect(() => {
+    if (skipFirstResetRef.current) {
+      skipFirstResetRef.current = false;
+      return;
+    }
     const today = startOfDay(new Date());
     try { sessionStorage.removeItem(SESSION_KEY); } catch {}
     setSelectedDateState((prev) => (prev.getTime() === today.getTime() ? prev : today));

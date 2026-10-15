@@ -18,7 +18,8 @@ const TertiaryFeaturedSection = memo(() => {
   const [mobileApi, setMobileApi] = useState<CarouselApi>();
   const [desktopApi, setDesktopApi] = useState<CarouselApi>();
   const [showAllItems, setShowAllItems] = useState(false);
-  const { selectedDate } = useSelectedDate();
+  // Monta depois da busca da Home: mantém a data já escolhida pelo visitante.
+  const { selectedDate } = useSelectedDate({ resetOnMount: false });
   const { offers: allOffers, establishments, loading } = useNovaxsEstablishments(selectedDate, { enableFallbackAvailability: false });
   const { offers: bahOffers, establishments: bahEstablishments, loading: bahLoading } = useBahofertasPartners();
 
@@ -98,7 +99,11 @@ const TertiaryFeaturedSection = memo(() => {
   if (offers.length === 0) return null;
 
   return (
-    <section className="pt-6 md:pt-9 pb-6 relative overflow-hidden" aria-labelledby="offers-heading">
+    <section
+      className="pt-6 md:pt-9 pb-6 relative overflow-hidden"
+      aria-labelledby={banner ? undefined : "offers-heading"}
+      aria-label={banner ? "Ofertas e descontos" : undefined}
+    >
       <div className={HOME_CONTAINER}>
         {banner ? (
           <div className="mb-1">

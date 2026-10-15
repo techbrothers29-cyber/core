@@ -237,7 +237,7 @@ const HeroSection = memo(() => {
             return (
               <CarouselItem key={slide.id || index} className="pl-0">
                 {/* Celular: altura fixa com imagem própria (cover). Tablet/desktop: proporção 1600x250 do banner, sem faixas vazias. */}
-                <article className="relative h-[160px] md:h-auto md:aspect-[32/5] overflow-hidden rounded-2xl select-none" itemScope itemType="https://schema.org/Offer">
+                <article className={`relative h-[160px] md:h-auto md:aspect-[32/5] ${hasText ? "md:min-h-[220px]" : ""} overflow-hidden rounded-2xl select-none`} itemScope itemType="https://schema.org/Offer">
                   <div className="absolute inset-0">
                     <picture>
                       <source media="(max-width: 767px)" srcSet={mobileSrc} />

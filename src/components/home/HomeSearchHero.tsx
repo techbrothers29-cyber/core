@@ -21,7 +21,10 @@ const HomeSearchHero = () => {
   const { selectedDate, setSelectedDate } = useSelectedDate();
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [dateOpen, setDateOpen] = useState(false);
+  // Um estado por calendário: desktop e celular ficam ambos montados (um só escondido por CSS).
+  // Com um estado compartilhado, os dois abriam juntos, disputavam o foco e fechavam um ao outro.
+  const [dateOpenDesktop, setDateOpenDesktop] = useState(false);
+  const [dateOpenMobile, setDateOpenMobile] = useState(false);
   const desktopRef = useRef<HTMLDivElement>(null);
   const mobileRef = useRef<HTMLDivElement>(null);
   const desktopInputRef = useRef<HTMLInputElement>(null);
@@ -64,14 +67,14 @@ const HomeSearchHero = () => {
     setQuery("");
   };
 
-  const datePicker = (
+  const renderDatePicker = (close: () => void) => (
     <Calendar
       mode="single"
       selected={selectedDate}
       onSelect={(d) => {
         if (!d) return;
         setSelectedDate(d);
-        setDateOpen(false);
+        close();
       }}
       disabled={(d) => isBefore(d, startOfDay(new Date()))}
       initialFocus
@@ -103,7 +106,7 @@ const HomeSearchHero = () => {
               />
             </label>
             <div className="w-px h-8 bg-[#dddddd]" aria-hidden="true" />
-            <Popover open={dateOpen} onOpenChange={setDateOpen}>
+            <Popover open={dateOpenDesktop} onOpenChange={setDateOpenDesktop}>
               <PopoverTrigger asChild>
                 <button
                   type="button"
@@ -114,7 +117,9 @@ const HomeSearchHero = () => {
                   <span className="block text-sm text-muted-foreground truncate">{dateLabel}</span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="center">{datePicker}</PopoverContent>
+              <PopoverContent className="w-auto p-0" align="center">
+                {renderDatePicker(() => setDateOpenDesktop(false))}
+              </PopoverContent>
             </Popover>
             <div className="w-px h-8 bg-[#dddddd]" aria-hidden="true" />
             <button
@@ -158,7 +163,7 @@ const HomeSearchHero = () => {
             />
             <span className="block text-xs text-muted-foreground truncate">Hotéis, parques, restaurantes · {dateLabel}</span>
           </label>
-          <Popover open={dateOpen} onOpenChange={setDateOpen}>
+          <Popover open={dateOpenMobile} onOpenChange={setDateOpenMobile}>
             <PopoverTrigger asChild>
               <button
                 type="button"
@@ -168,7 +173,9 @@ const HomeSearchHero = () => {
                 <CalendarDays className="w-[18px] h-[18px]" strokeWidth={1.8} />
               </button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="end">{datePicker}</PopoverContent>
+            <PopoverContent className="w-auto p-0" align="end">
+              {renderDatePicker(() => setDateOpenMobile(false))}
+            </PopoverContent>
           </Popover>
         </div>
         {showResults && (

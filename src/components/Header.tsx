@@ -397,7 +397,7 @@ const Header = () => {
       {/* Mobile Search Bar - Expandable */}
       <div
         ref={mobileSearchContainerRef}
-        className={`md:hidden border-t border-border/50 transition-all duration-300 ease-in-out relative ${
+        className={`${isHome ? 'hidden' : 'md:hidden'} border-t border-border/50 transition-all duration-300 ease-in-out relative ${
           isSearchOpen ? 'max-h-[400px] opacity-100 py-2 px-4' : 'max-h-0 opacity-0 py-0 px-4 overflow-hidden'
         }`}
       >
