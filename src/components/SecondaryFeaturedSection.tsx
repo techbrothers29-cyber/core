@@ -69,11 +69,9 @@ const SecondaryFeaturedSection = memo(() => {
 
   if (loading) {
     return (
-      <section className="py-6 relative overflow-hidden bg-muted/30">
-        <div className="container mx-auto px-4">
-          <div className="max-w-[1600px] mx-auto">
-            <CarouselSkeletonLoader type="offer" />
-          </div>
+      <section className="pt-6 md:pt-9 pb-3 relative overflow-hidden" aria-busy="true">
+        <div className={HOME_CONTAINER}>
+          <CarouselSkeletonLoader type="offer" />
         </div>
       </section>
     );

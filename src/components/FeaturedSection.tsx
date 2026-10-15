@@ -44,11 +44,9 @@ const FeaturedSection = memo(() => {
   // Render as soon as NovaXS data is ready — don't block on Bah Ofertas partners.
   if (loading) {
     return (
-      <section className="py-6 relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="max-w-[1600px] mx-auto">
-            <CarouselSkeletonLoader type="offer" />
-          </div>
+      <section className="pt-6 md:pt-9 pb-3 relative overflow-hidden" aria-busy="true">
+        <div className={HOME_CONTAINER}>
+          <CarouselSkeletonLoader type="offer" />
         </div>
       </section>
     );

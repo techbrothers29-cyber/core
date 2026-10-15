@@ -86,11 +86,9 @@ const TertiaryFeaturedSection = memo(() => {
 
   if (loading) {
     return (
-      <section className="py-6 relative overflow-hidden">
-        <div className="container mx-auto px-4">
-          <div className="max-w-[1600px] mx-auto">
-            <CarouselSkeletonLoader type="offer" />
-          </div>
+      <section className="pt-6 md:pt-9 pb-3 relative overflow-hidden" aria-busy="true">
+        <div className={HOME_CONTAINER}>
+          <CarouselSkeletonLoader type="offer" />
         </div>
       </section>
     );
@@ -99,24 +97,16 @@ const TertiaryFeaturedSection = memo(() => {
   if (offers.length === 0) return null;
 
   return (
-    <section
-      className="pt-6 md:pt-9 pb-6 relative overflow-hidden"
-      aria-labelledby={banner ? undefined : "offers-heading"}
-      aria-label={banner ? "Ofertas e descontos" : undefined}
-    >
+    <section className="pt-6 md:pt-9 pb-6 relative overflow-hidden" aria-labelledby="offers-heading">
       <div className={HOME_CONTAINER}>
-        {banner ? (
-          <div className="mb-1">
-            <PromotionalBanner imageUrl={banner.image_url} title={banner.title} />
-          </div>
-        ) : (
-          <HomeSectionHeading
-            id="offers-heading"
-            title="Ofertas e descontos"
-            mobileTitle="Ofertas"
-            aside={`${offers.length} produtos com desconto ou meia-entrada`}
-          />
-        )}
+        {/* Banner (quando houver) acima do título, como em Gastronomia — a seção nunca fica sem nome. */}
+        {banner && <PromotionalBanner imageUrl={banner.image_url} title={banner.title} />}
+        <HomeSectionHeading
+          id="offers-heading"
+          title="Ofertas e descontos"
+          mobileTitle="Ofertas"
+          aside={`${offers.length} produtos com desconto ou meia-entrada`}
+        />
 
         <div className="md:hidden">
           <Carousel className="w-full" opts={{ align: "start", loop: true, dragFree: true }} setApi={setMobileApi}>

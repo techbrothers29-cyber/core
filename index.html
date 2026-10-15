@@ -64,7 +64,11 @@
     <link rel="dns-prefetch" href="//fonts.googleapis.com">
     <link rel="dns-prefetch" href="//www.google-analytics.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <!-- Fonte da Home carregada sem bloquear a primeira pintura de nenhuma página -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"></noscript>
     <!-- Acelera primeiro carregamento da home: handshake antecipado com Supabase -->
     <link rel="preconnect" href="https://lyypfrtnmhwahixvvjxk.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="//lyypfrtnmhwahixvvjxk.supabase.co">

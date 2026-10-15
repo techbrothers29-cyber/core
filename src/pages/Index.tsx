@@ -79,21 +79,16 @@ const Index = () => {
         <HomeCategoryTabs />
         <HomeSignupStrip />
         <HeroSection />
-        <section aria-label="Ofertas em destaque">
-          <FeaturedSection />
-        </section>
+        {/* Cada seção já é um <section> com título próprio; sem embrulho extra (evita nomes duplicados para leitor de tela). */}
+        <FeaturedSection />
         {showDeferredSections && (
           <>
-            <section aria-label="Gastronomia">
-              <Suspense fallback={<SectionSkeleton />}>
-                <SecondaryFeaturedSection />
-              </Suspense>
-            </section>
-            <section aria-label="Ofertas e descontos">
-              <Suspense fallback={<SectionSkeleton />}>
-                <TertiaryFeaturedSection />
-              </Suspense>
-            </section>
+            <Suspense fallback={<SectionSkeleton />}>
+              <SecondaryFeaturedSection />
+            </Suspense>
+            <Suspense fallback={<SectionSkeleton />}>
+              <TertiaryFeaturedSection />
+            </Suspense>
             <section aria-labelledby="testimonials-heading">
               <h2 id="testimonials-heading" className="sr-only">Avaliações dos clientes</h2>
               <Suspense fallback={null}>

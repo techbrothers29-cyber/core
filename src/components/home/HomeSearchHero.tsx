@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { format, isBefore, startOfDay } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Search, CalendarDays, BedDouble } from "lucide-react";
+import { Search, CalendarDays, BedDouble, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
@@ -31,15 +31,22 @@ const HomeSearchHero = () => {
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const { results, isSearching } = useGlobalSearch(query, query.trim().length > 0);
 
+  // pointerdown cobre mouse e toque (no iPhone, "mousedown" não dispara ao tocar em áreas não clicáveis).
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e: PointerEvent) => {
       const t = e.target as Node;
       if (desktopRef.current?.contains(t) || mobileRef.current?.contains(t)) return;
       setShowResults(false);
     };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("pointerdown", onDown);
+    return () => document.removeEventListener("pointerdown", onDown);
   }, []);
+
+  const clearQuery = (input: HTMLInputElement | null) => {
+    setQuery("");
+    setShowResults(false);
+    input?.focus();
+  };
 
   const isToday = startOfDay(selectedDate).getTime() === startOfDay(new Date()).getTime();
   const dateLabel = isToday ? "Hoje" : format(selectedDate, "dd 'de' MMM", { locale: ptBR });
@@ -77,6 +84,7 @@ const HomeSearchHero = () => {
         close();
       }}
       disabled={(d) => isBefore(d, startOfDay(new Date()))}
+      locale={ptBR}
       initialFocus
       className="p-3 pointer-events-auto"
     />
@@ -105,6 +113,16 @@ const HomeSearchHero = () => {
                 aria-label="Onde: buscar cidade, hotel, parque ou restaurante"
               />
             </label>
+            {query && (
+              <button
+                type="button"
+                onClick={() => clearQuery(desktopInputRef.current)}
+                className="shrink-0 w-8 h-8 mr-1 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
+                aria-label="Limpar busca"
+              >
+                <X className="w-4 h-4" strokeWidth={2} />
+              </button>
+            )}
             <div className="w-px h-8 bg-[#dddddd]" aria-hidden="true" />
             <Popover open={dateOpenDesktop} onOpenChange={setDateOpenDesktop}>
               <PopoverTrigger asChild>
@@ -147,22 +165,39 @@ const HomeSearchHero = () => {
 
       {/* Celular */}
       <div ref={mobileRef} className="md:hidden">
-        <div className="flex items-center gap-3 h-14 bg-card border border-[#dddddd] rounded-full shadow-[0_3px_10px_rgba(0,0,0,0.08)] pl-5 pr-2">
+        {/* Toda a pílula (exceto os botões) abre o teclado: antes só a linha do texto (20px) respondia ao toque. */}
+        <div
+          className="flex items-center gap-3 h-14 bg-card border border-[#dddddd] rounded-full shadow-[0_3px_10px_rgba(0,0,0,0.08)] pl-5 pr-2 cursor-text"
+          onClick={(e) => {
+            if (!(e.target as HTMLElement).closest("button")) mobileInputRef.current?.focus();
+          }}
+        >
           <Search className="w-5 h-5 shrink-0 text-foreground" strokeWidth={1.8} aria-hidden="true" />
-          <label className="flex-1 min-w-0 leading-tight">
+          <label className="flex-1 min-w-0 self-stretch flex flex-col justify-center leading-tight">
             <span className="sr-only">Para onde?</span>
             <input
               ref={mobileInputRef}
-              type="text"
+              type="search"
+              enterKeyHint="search"
               value={query}
               onChange={(e) => onChange(e.target.value)}
               onFocus={() => query.trim().length >= 2 && setShowResults(true)}
               onKeyDown={onKeyDown}
               placeholder="Para onde?"
-              className="w-full bg-transparent border-0 p-0 text-sm font-semibold text-foreground placeholder:text-foreground focus:outline-none"
+              className="w-full bg-transparent border-0 p-0 text-base font-semibold text-foreground placeholder:text-foreground focus:outline-none [&::-webkit-search-cancel-button]:hidden"
             />
             <span className="block text-xs text-muted-foreground truncate">Hotéis, parques, restaurantes · {dateLabel}</span>
           </label>
+          {query && (
+            <button
+              type="button"
+              onClick={() => clearQuery(mobileInputRef.current)}
+              className="shrink-0 w-10 h-10 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"
+              aria-label="Limpar busca"
+            >
+              <X className="w-[18px] h-[18px]" strokeWidth={2} />
+            </button>
+          )}
           <Popover open={dateOpenMobile} onOpenChange={setDateOpenMobile}>
             <PopoverTrigger asChild>
               <button
