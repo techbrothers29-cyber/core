@@ -163,7 +163,7 @@ const HotelFilters = ({ filters, onFilterChange, hotels, resultCount, onDone, so
           </Section>
         )}
 
-        <Section title="Preço por noite" hint="Valor final por noite, com impostos e taxas inclusos.">
+        <Section title="Preço por noite" hint="Média por noite da tarifa mais barata. Taxas pagas no hotel, quando houver, aparecem na página da hospedagem.">
           <div className="flex h-16 items-end gap-[2px]" aria-hidden="true">
             {bins.map((h, i) => {
               const start = (i / BINS) * priceMax;
