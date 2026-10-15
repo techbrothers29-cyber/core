@@ -9,7 +9,7 @@ import {
   BadgePercent,
   ChevronDown,
 } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logoDesktop from "@/assets/logo-desktop.png";
@@ -75,6 +75,7 @@ const linkClass =
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const isHome = useLocation().pathname === "/";
   const [socialUrls, setSocialUrls] = useState<{ facebook?: string; instagram?: string; twitter?: string }>({
     instagram: "https://instagram.com/bahofertas.rs",
   });
@@ -110,7 +111,8 @@ const Footer = () => {
 
   return (
     <footer className="font-jakarta text-foreground bg-white border-t border-[#ebebeb]">
-      {/* Faixa de confiança */}
+      {/* Faixa de confiança (fora da página inicial) */}
+      {!isHome && (
       <div className="bg-[#fafafa] border-b border-[#ebebeb]">
         <ul className="w-full max-w-[1600px] mx-auto px-5 md:px-8 py-5 md:py-6 m-0 list-none grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-8">
           {TRUST.map(({ icon: Icon, title, text }) => (
@@ -126,6 +128,7 @@ const Footer = () => {
           ))}
         </ul>
       </div>
+      )}
 
       {/* Conteúdo principal */}
       <div className="w-full max-w-[1600px] mx-auto px-5 md:px-8 pt-8 md:pt-12 pb-4 md:pb-10">
