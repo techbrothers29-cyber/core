@@ -2,7 +2,6 @@ import {
   Facebook,
   Instagram,
   Twitter,
-  Mail,
   MapPin,
   ShieldCheck,
   Headset,
@@ -13,6 +12,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import logoDesktop from "@/assets/logo-desktop.png";
+import gmailIcon from "@/assets/icon-gmail.png";
+import instagramIcon from "@/assets/icon-instagram.png";
 
 type FooterLink = { title: string; href: string };
 
@@ -160,9 +161,13 @@ const Footer = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Bah Ofertas no ${s.label}`}
-                    className="w-11 h-11 inline-flex items-center justify-center rounded-full border border-[#dddddd] text-foreground hover:border-primary hover:text-primary transition-colors"
+                    className={s.label === "Instagram"
+                      ? "w-11 h-11 inline-flex items-center justify-center rounded-full hover:brightness-95 transition"
+                      : "w-11 h-11 inline-flex items-center justify-center rounded-full border border-[#dddddd] text-foreground hover:border-primary hover:text-primary transition-colors"}
                   >
-                    <s.icon className="w-[18px] h-[18px]" aria-hidden="true" />
+                    {s.label === "Instagram"
+                      ? <img src={instagramIcon} alt="" width={44} height={44} className="w-11 h-11" />
+                      : <s.icon className="w-[18px] h-[18px]" aria-hidden="true" />}
                   </a>
                 ))}
               </div>
@@ -219,8 +224,8 @@ const Footer = () => {
               </li>
               <li>
                 <a href="mailto:contato@bahofertas.com" className="group flex items-center gap-3 min-h-[44px]">
-                  <span className="w-10 h-10 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                    <Mail className="w-5 h-5" aria-hidden="true" />
+                  <span className="w-10 h-10 shrink-0 rounded-xl bg-[#f7f7f7] flex items-center justify-center">
+                    <img src={gmailIcon} alt="" width={24} height={24} className="w-6 h-6" />
                   </span>
                   <span className="leading-tight min-w-0">
                     <span className="block text-xs text-[#6b6b6b]">E-mail</span>
