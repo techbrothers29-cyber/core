@@ -250,9 +250,10 @@ const Hospedagem = () => {
     });
     // Scroll to results section after triggering the search
     requestAnimationFrame(() => {
-      const el = resultsRef.current;
+      // Mira nos chips de filtro (logo acima dos resultados) para eles não ficarem cortados sob o topo fixo
+      const el = (resultsRef.current?.previousElementSibling as HTMLElement | null) ?? resultsRef.current;
       if (el) {
-        const top = el.getBoundingClientRect().top + window.pageYOffset - 80;
+        const top = Math.max(0, el.getBoundingClientRect().top + window.pageYOffset - 72);
         window.scrollTo({ top, behavior: 'smooth' });
       }
     });

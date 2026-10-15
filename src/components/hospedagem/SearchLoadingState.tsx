@@ -15,7 +15,7 @@ const STEPS = [
 /** Esqueleto no mesmo formato do HotelResultCard (foto em cima no celular, ao lado no desktop). */
 const CardSkeleton = () => (
   <li className="flex flex-col md:flex-row md:gap-4 md:rounded-2xl md:border md:border-[#ebebeb] md:p-3">
-    <Skeleton className="h-[230px] w-full shrink-0 rounded-2xl md:h-[160px] md:w-[240px]" />
+    <Skeleton className="bg-[#efefef] h-[230px] w-full shrink-0 rounded-2xl md:h-[160px] md:w-[240px]" />
     <div className="mt-3 flex-1 space-y-2.5 md:mt-1">
       <Skeleton className="h-4 w-3/4 md:h-5 md:w-1/2" />
       <Skeleton className="h-3.5 w-1/2 md:w-1/3" />
