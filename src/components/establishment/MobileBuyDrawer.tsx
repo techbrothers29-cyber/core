@@ -119,17 +119,20 @@ export default function MobileBuyDrawer({
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="px-4 pb-8 pt-2 max-h-[92vh] overflow-y-auto">
-        <div className="mx-auto w-12 h-1.5 rounded-full bg-muted mb-4" />
+      {/* Visual novo: folha com cantos 22px, alça cinza única (a alça padrão do Drawer fica oculta) */}
+      <DrawerContent className="font-jakarta rounded-t-[22px] border-0 px-4 pt-2.5 pb-[calc(20px+env(safe-area-inset-bottom))] max-h-[92vh] overflow-y-auto shadow-[0_-6px_24px_rgba(0,0,0,0.18)] [&>div:first-child]:hidden">
+        <div className="mx-auto w-12 h-[5px] rounded-full bg-[#dddddd] mb-3.5" aria-hidden="true" />
 
         {step === "date" && (
           <>
             {product && (
               <div className="mb-3 flex items-center gap-2">
-                <CalendarDays className="w-4 h-4 text-primary" />
-                <h3 className="text-sm font-semibold text-foreground line-clamp-1">{product.name}</h3>
+                <CalendarDays className="w-4 h-4 text-primary" aria-hidden="true" />
+                <h3 className="text-[15px] font-semibold text-foreground line-clamp-1">{product.name}</h3>
               </div>
             )}
+            {/* Embrulho só visual: o calendário é compartilhado com outras páginas */}
+            <div className="[&>div]:max-w-none [&>div]:rounded-none [&>div]:border-0 [&>div]:p-0 [&>div]:shadow-none">
             <ParksnetCalendar
               selectedDate={selectedDate}
               onDateChange={handleDateSelect}
@@ -141,6 +144,7 @@ export default function MobileBuyDrawer({
               onMonthChange={onMonthChange}
               allowedMonths={allowedMonths}
             />
+            </div>
           </>
         )}
 
@@ -149,13 +153,13 @@ export default function MobileBuyDrawer({
             <div className="flex items-center gap-2 mb-3">
               <button
                 onClick={() => onOpenChange(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center border border-border hover:bg-accent text-foreground transition-colors"
+                className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center border border-[#dddddd] bg-white hover:bg-[#f7f7f7] text-foreground transition-colors"
                 aria-label="Voltar"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-foreground line-clamp-1">{product.name}</h3>
+                <h3 className="text-[15px] font-semibold text-foreground line-clamp-1">{product.name}</h3>
                 <p className="text-xs text-muted-foreground">
                   {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
                 </p>
@@ -163,25 +167,25 @@ export default function MobileBuyDrawer({
             </div>
 
             {/* Quantity */}
-            <div className="bg-muted/30 rounded-xl p-3 mb-4">
+            <div className="bg-[#f7f7f7] rounded-[14px] px-4 py-2.5 mb-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                  <Users className="w-3.5 h-3.5" />
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Users className="w-4 h-4" aria-hidden="true" />
                   <span>Quantidade</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1}
-                    className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="w-11 h-11 rounded-full border border-[#dddddd] bg-white flex items-center justify-center hover:bg-[#f7f7f7] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     aria-label="Diminuir"
                   >
                     <Minus className="w-3.5 h-3.5" />
                   </button>
-                  <span className="text-sm font-semibold text-foreground w-6 text-center">{quantity}</span>
+                  <span className="text-base font-bold text-foreground w-6 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-accent transition-colors"
+                    className="w-11 h-11 rounded-full border border-[#dddddd] bg-white flex items-center justify-center hover:bg-[#f7f7f7] transition-colors"
                     aria-label="Aumentar"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -192,8 +196,8 @@ export default function MobileBuyDrawer({
 
             {/* Schedules */}
             <div className="mb-4">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground mb-2">
-                <Clock className="w-3.5 h-3.5" />
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-foreground mb-2">
+                <Clock className="w-4 h-4" aria-hidden="true" />
                 <span>Selecione o horário</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -211,10 +215,10 @@ export default function MobileBuyDrawer({
                       disabled={isUnavailable}
                       onClick={() => setSelectedSchedule(time)}
                       className={cn(
-                        "flex flex-col items-center justify-center px-2 py-2.5 rounded-lg border text-xs transition-all",
+                        "flex min-h-[48px] flex-col items-center justify-center px-2 py-2.5 rounded-xl border text-xs transition-all",
                         isSelected
                           ? "border-primary bg-primary/10 text-primary font-semibold ring-1 ring-primary/30"
-                          : "border-border hover:border-primary/50 text-foreground bg-card",
+                          : "border-[#dddddd] hover:border-[#222222] text-foreground bg-white",
                         isUnavailable && "opacity-40 cursor-not-allowed line-through"
                       )}
                     >
@@ -234,15 +238,15 @@ export default function MobileBuyDrawer({
             </div>
 
             {/* Footer: total + add */}
-            <div className="sticky bottom-0 bg-background pt-3 border-t border-border -mx-4 px-4">
+            <div className="sticky bottom-0 bg-background pt-3.5 mt-[18px] border-t border-[#ebebeb] -mx-4 px-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-muted-foreground">Total</span>
-                <span className="text-lg font-extrabold text-primary">{priceFormatted}</span>
+                <span className="text-[13px] text-muted-foreground">Total</span>
+                <span className="text-xl font-bold text-primary">{priceFormatted}</span>
               </div>
               <Button
                 disabled={!canConfirm}
                 onClick={handleConfirm}
-                className="w-full h-11 rounded-full text-sm font-semibold"
+                className="w-full h-12 rounded-full text-[15px] font-semibold"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 {canConfirm ? "Adicionar ao carrinho" : "Selecione um horário"}
@@ -256,13 +260,13 @@ export default function MobileBuyDrawer({
             <div className="flex items-center gap-2 mb-3">
               <button
                 onClick={() => onOpenChange(false)}
-                className="w-8 h-8 rounded-full flex items-center justify-center border border-border hover:bg-accent text-foreground transition-colors"
+                className="w-11 h-11 shrink-0 rounded-full flex items-center justify-center border border-[#dddddd] bg-white hover:bg-[#f7f7f7] text-foreground transition-colors"
                 aria-label="Voltar"
               >
                 <ArrowLeft className="w-4 h-4" />
               </button>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-semibold text-foreground line-clamp-1">{product.name}</h3>
+                <h3 className="text-[15px] font-semibold text-foreground line-clamp-1">{product.name}</h3>
                 <p className="text-xs text-muted-foreground">
                   {format(selectedDate, "EEEE, dd 'de' MMMM", { locale: ptBR })}
                 </p>
@@ -270,25 +274,25 @@ export default function MobileBuyDrawer({
             </div>
 
             {/* Quantity */}
-            <div className="bg-muted/30 rounded-xl p-4 mb-4">
+            <div className="bg-[#f7f7f7] rounded-[14px] px-4 py-3 mb-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-sm font-medium text-foreground">
-                  <Users className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <Users className="w-4 h-4" aria-hidden="true" />
                   <span>Quantidade</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                     disabled={quantity <= 1}
-                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-accent disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="w-11 h-11 rounded-full border border-[#dddddd] bg-white flex items-center justify-center hover:bg-[#f7f7f7] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                     aria-label="Diminuir"
                   >
                     <Minus className="w-4 h-4" />
                   </button>
-                  <span className="text-base font-semibold text-foreground w-7 text-center">{quantity}</span>
+                  <span className="text-base font-bold text-foreground w-7 text-center">{quantity}</span>
                   <button
                     onClick={() => setQuantity((q) => q + 1)}
-                    className="w-9 h-9 rounded-full border border-border flex items-center justify-center hover:bg-accent transition-colors"
+                    className="w-11 h-11 rounded-full border border-[#dddddd] bg-white flex items-center justify-center hover:bg-[#f7f7f7] transition-colors"
                     aria-label="Aumentar"
                   >
                     <Plus className="w-4 h-4" />
@@ -298,14 +302,14 @@ export default function MobileBuyDrawer({
             </div>
 
             {/* Footer: total + add */}
-            <div className="sticky bottom-0 bg-background pt-3 border-t border-border -mx-4 px-4">
+            <div className="sticky bottom-0 bg-background pt-3.5 mt-[18px] border-t border-[#ebebeb] -mx-4 px-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs text-muted-foreground">Total</span>
-                <span className="text-lg font-extrabold text-primary">{priceFormatted}</span>
+                <span className="text-[13px] text-muted-foreground">Total</span>
+                <span className="text-xl font-bold text-primary">{priceFormatted}</span>
               </div>
               <Button
                 onClick={handleConfirm}
-                className="w-full h-11 rounded-full text-sm font-semibold"
+                className="w-full h-12 rounded-full text-[15px] font-semibold"
               >
                 <ShoppingCart className="w-4 h-4 mr-2" />
                 Adicionar ao carrinho

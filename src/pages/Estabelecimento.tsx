@@ -17,8 +17,12 @@ import {
   resolveEstablishmentCity,
   resolveEstablishmentAddress,
 } from "@/lib/seo";
-import CategoryNav from "@/components/CategoryNav";
 import Footer from "@/components/Footer";
+import HomeBottomNav from "@/components/home/HomeBottomNav";
+import OfferRoundButton from "@/components/offer/redesign/OfferRoundButton";
+import { useOfferActions } from "@/components/offer/redesign/useOfferActions";
+import EstablishmentInfoSections from "@/components/establishment/redesign/EstablishmentInfoSections";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,6 +37,9 @@ import {
   ChevronLeft,
   ChevronRight,
   CalendarDays,
+  Heart,
+  Share,
+  X,
 } from "lucide-react";
 import { useNovaxsEstablishments, applyOverrides } from "@/hooks/useNovaxsEstablishments";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -56,7 +63,6 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import ManualSchedulingNotice from "@/components/ManualSchedulingNotice";
 import { useEstablishmentAvailability } from "@/hooks/useEstablishmentAvailability";
 
-import EstablishmentSidebar from "@/components/establishment/EstablishmentSidebar";
 import MiniVideoPlayer from "@/components/establishment/MiniVideoPlayer";
 import nativitatenVideoAsset from "@/assets/nativitaten-video.mp4.asset.json";
 import garfoBombachaVideoAsset from "@/assets/garfo-e-bombacha-video.mp4.asset.json";
@@ -216,6 +222,9 @@ function getNextAvailableDay(
 }
 
 
+
+// Mesmo container das páginas novas (hotel/oferta).
+const DETAIL_CONTAINER = "w-full max-w-[1280px] mx-auto px-5 md:px-8 lg:px-12";
 
 const Estabelecimento = () => {
   const { name } = useParams<{ name: string }>();
@@ -801,36 +810,61 @@ const Estabelecimento = () => {
   };
 
 
+  // Voltar / compartilhar / favoritar (visual novo). Hooks ficam antes dos
+  // retornos antecipados. Favorito usa a mesma chave da Home: `est:<id>`.
+  const favLabel = displayEstablishment ? displayEstablishment.displayName || displayEstablishment.name : "";
+  const favMinPrice = displayEstablishment?.minPrice ?? 0;
+  const favItem = displayEstablishment
+    ? {
+        key: `est:${displayEstablishment.id}`,
+        title: favLabel,
+        image: displayEstablishment.image || heroImage || undefined,
+        path: establishmentPath(favLabel),
+        subtitle: "Serra Gaúcha",
+        rating: displayEstablishment.rating,
+        priceLabel:
+          favMinPrice > 0
+            ? `A partir de ${(favMinPrice / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}`
+            : undefined,
+      }
+    : null;
+  const { goBack, share, toggleFav, favorited } = useOfferActions(
+    favItem,
+    favLabel,
+    favLabel ? absoluteUrl(`/estabelecimento/${establishmentSlug(favLabel)}`) : typeof window !== "undefined" ? window.location.href : "",
+  );
+
   // Only show full skeleton on initial load (no cached establishment)
   if (loading && !displayEstablishment) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto px-4 py-6">
-          <Skeleton className="h-48 w-full rounded-xl mb-4" />
+      <div className="min-h-screen overflow-x-clip bg-background font-jakarta">
+        <Skeleton className="h-[230px] w-full rounded-none md:hidden" />
+        <main className={`${DETAIL_CONTAINER} relative -mt-[22px] rounded-t-[22px] bg-background pt-6 pb-8 md:mt-0 md:rounded-none md:pt-4`}>
+          <Skeleton className="hidden h-[200px] w-full rounded-2xl md:block mb-4" />
           <Skeleton className="h-6 w-48 mb-2" />
           <Skeleton className="h-4 w-32 mb-6" />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[...Array(6)].map((_, i) => (
-              <Skeleton key={i} className="h-56 rounded-xl" />
+              <Skeleton key={i} className="h-56 rounded-2xl" />
             ))}
           </div>
         </main>
         <Footer />
-        <CategoryNav />
+        <HomeBottomNav />
       </div>
     );
   }
 
   if (!displayEstablishment) {
     return (
-      <div className="min-h-screen bg-background">
-        <main className="container mx-auto px-4 py-16 text-center">
+      <div className="min-h-screen overflow-x-clip bg-background font-jakarta">
+        <main className={`${DETAIL_CONTAINER} py-16 text-center`}>
           <h1 className="text-2xl font-bold mb-4">Estabelecimento não encontrado</h1>
           <p className="text-muted-foreground mb-6">O estabelecimento que você procura não está disponível.</p>
-          <Button onClick={() => navigate("/")}>Voltar ao início</Button>
+          <Button className="h-12 rounded-xl px-6" onClick={() => navigate("/")}>Voltar ao início</Button>
         </main>
         <Footer />
-        <CategoryNav />
+        <HomeBottomNav />
       </div>
     );
   }
@@ -879,8 +913,103 @@ const Estabelecimento = () => {
     ...(estCity !== "Canela" ? [{ to: "/hoteis-em-canela", label: "Hotéis em Canela" }] : []),
   ].filter((link, index, arr) => arr.findIndex((l) => l.to === link.to) === index);
 
+  const ratingLabel = Number(displayEstablishment.rating || 0).toFixed(1).replace(".", ",");
+
+  // Lista de produtos: linhas (eventos com setores) ou cartões com foto (demais).
+  // Mesmo ProductCard, mesmas props e mesma lógica de compra nos dois formatos.
+  const productList = (
+    <div className="relative">
+      {/* Loading overlay — only covers products, not the whole page */}
+      {productsLoading && (
+        <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-[2px] rounded-2xl flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2">
+            <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs text-muted-foreground">Atualizando produtos…</span>
+          </div>
+        </div>
+      )}
+      {pageVenue ? (
+        <ul className="m-0 list-none p-0">
+          {filteredProducts.map((product, index) => (
+            <li key={product.id || product.path}>
+              <ProductCard
+                variant="row"
+                product={product}
+                index={index}
+                selectedDate={selectedDate}
+                productPrices={productPrices}
+                establishmentId={displayEstablishment?.id}
+                establishmentName={displayEstablishment?.displayName || displayEstablishment?.name}
+                requiresSeatSelection={productRequiresSeatSelection(displayEstablishment, product)}
+                onOpenSeatMap={openSeatMapFor}
+              />
+            </li>
+          ))}
+          {filteredProducts.length === 0 && (productsLoading || loading || availabilityLoading || !hasResolvedMonth) && (
+            <>
+              {[...Array(4)].map((_, i) => (
+                <li key={`prod-skel-${i}`} className="border-t border-[#ebebeb] py-4">
+                  <Skeleton className="h-5 w-full rounded-md" />
+                </li>
+              ))}
+            </>
+          )}
+        </ul>
+      ) : (
+        <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2">
+          {filteredProducts.map((product, index) => (
+            <ProductCard
+              key={product.id || product.path}
+              product={product}
+              index={index}
+              selectedDate={selectedDate}
+              productPrices={productPrices}
+              establishmentId={displayEstablishment?.id}
+              establishmentName={displayEstablishment?.displayName || displayEstablishment?.name}
+              requiresSeatSelection={productRequiresSeatSelection(displayEstablishment, product)}
+              onOpenSeatMap={openSeatMapFor}
+            />
+          ))}
+          {/* Enquanto a API ainda está respondendo e não temos produtos do estabelecimento,
+              mostramos skeletons em vez de "Nenhum produto encontrado" — evita confundir
+              o visitante que entra direto na página. */}
+          {filteredProducts.length === 0 && (productsLoading || loading || availabilityLoading || !hasResolvedMonth) && (
+            <>
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={`prod-skel-${i}`} className="h-56 rounded-2xl" />
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {filteredProducts.length === 0 && !productsLoading && !loading && !availabilityLoading && hasResolvedMonth && (
+        <div className="text-center py-12">
+          {sectorFilter && pageVenue ? (
+            <>
+              <p className="text-muted-foreground">
+                Nenhum ingresso do setor{" "}
+                <strong>{pageVenue.sectors.find((s) => s.id === sectorFilter)?.label}</strong>{" "}
+                disponível para esta data.
+              </p>
+              <button
+                type="button"
+                onClick={() => setSectorFilter(null)}
+                className="mt-3 min-h-[44px] text-sm font-semibold text-primary underline underline-offset-4"
+              >
+                Ver todos os setores
+              </button>
+            </>
+          ) : (
+            <p className="text-muted-foreground">Nenhum produto encontrado para este filtro.</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen overflow-x-clip bg-background font-jakarta text-foreground">
       <SEOHead
         title={seo.title}
         description={seo.description}
@@ -946,204 +1075,247 @@ const Estabelecimento = () => {
         ]}
       />
 
-      {/* Hero */}
-      <div className="relative h-44 md:h-60 overflow-hidden">
+      {/* Foto de ponta a ponta com botões redondos (celular). O cabeçalho global
+          fica escondido nesta rota no celular, então o "voltar" mora aqui. */}
+      <div className="relative h-[230px] w-full overflow-hidden bg-muted md:hidden">
         {heroImage ? (
           <img
             src={heroImage}
             alt={displayLabel}
-            className="w-full h-full object-cover animate-in fade-in duration-500"
+            className="h-full w-full object-cover animate-in fade-in duration-500"
             style={{ objectPosition: displayEstablishment.bannerPosition || "center" }}
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-primary/5" />
+          <div className="h-full w-full bg-gradient-to-br from-primary/20 to-primary/5" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-        <button
-          className="absolute top-3 left-3 z-10 flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-black/40 backdrop-blur-sm text-white/90 text-xs hover:bg-primary hover:text-primary-foreground active:scale-95 transition-transform touch-manipulation"
-          onClick={() => {
-            if (window.history.length > 1) {
-              navigate(-1);
-            } else {
-              navigate("/");
-            }
-          }}
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Voltar</span>
-        </button>
-        <div className="absolute bottom-4 left-4 right-4">
-          <h1 className="text-xl md:text-3xl font-bold text-white leading-tight">{displayLabel}</h1>
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            <div className="flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded-full px-2 py-0.5">
-              <Star className="w-3.5 h-3.5 fill-warning text-warning" />
-              <span className="font-bold text-xs">{displayEstablishment.rating.toFixed(1)}</span>
-            </div>
-            <div className="flex items-center gap-1 text-white/80 text-xs">
-              <MapPin className="w-3.5 h-3.5" />
-              <span>Serra Gaúcha</span>
-            </div>
-          </div>
-
+        {/* Leve sombra no topo para os botões brancos não sumirem em fotos claras */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/25 to-transparent" aria-hidden="true" />
+        <div className="absolute left-4 top-[max(14px,env(safe-area-inset-top))]">
+          <OfferRoundButton onClick={goBack} aria-label="Voltar">
+            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+          </OfferRoundButton>
+        </div>
+        <div className="absolute right-4 top-[max(14px,env(safe-area-inset-top))] flex gap-2.5">
+          <OfferRoundButton onClick={share} aria-label="Compartilhar">
+            <Share className="h-[18px] w-[18px]" aria-hidden="true" />
+          </OfferRoundButton>
+          <OfferRoundButton
+            onClick={toggleFav}
+            aria-label={favorited ? "Remover dos favoritos" : "Salvar nos favoritos"}
+            aria-pressed={favorited}
+          >
+            <Heart className={cn("h-[18px] w-[18px]", favorited && "fill-primary text-primary")} aria-hidden="true" />
+          </OfferRoundButton>
         </div>
       </div>
 
-      {/* Gallery */}
-      {displayEstablishment.galleryImages && displayEstablishment.galleryImages.length > 0 && (
-        <GalleryStrip images={displayEstablishment.galleryImages} name={displayLabel} />
-      )}
+      {/* Folha branca que sobe sobre a foto no celular; no desktop é o container da página */}
+      <main className={`${DETAIL_CONTAINER} relative -mt-[22px] rounded-t-[22px] bg-background pt-6 pb-8 md:mt-0 md:rounded-none md:pt-4 md:pb-12`}>
+        {/* Capa (tablet e desktop) */}
+        <div className="relative hidden h-[200px] overflow-hidden rounded-2xl bg-muted md:block">
+          {heroImage ? (
+            <img
+              src={heroImage}
+              alt={displayLabel}
+              className="h-full w-full object-cover animate-in fade-in duration-500"
+              style={{ objectPosition: displayEstablishment.bannerPosition || "center" }}
+            />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-primary/30 to-primary/10" />
+          )}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" aria-hidden="true" />
+          <button
+            type="button"
+            onClick={goBack}
+            className="absolute left-4 top-4 inline-flex h-11 items-center gap-1 rounded-full border border-[#dddddd] bg-white pl-3 pr-4 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-[#f7f7f7] active:scale-95"
+          >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
+            Voltar
+          </button>
+          <div className="absolute right-4 top-4 flex gap-2">
+            <button
+              type="button"
+              onClick={share}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dddddd] bg-white px-4 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-[#f7f7f7]"
+            >
+              <Share className="h-4 w-4" aria-hidden="true" />
+              Compartilhar
+            </button>
+            <button
+              type="button"
+              onClick={toggleFav}
+              aria-pressed={favorited}
+              className="inline-flex h-11 items-center gap-2 rounded-full border border-[#dddddd] bg-white px-4 text-sm font-semibold text-foreground shadow-sm transition-colors hover:bg-[#f7f7f7]"
+            >
+              <Heart className={cn("h-4 w-4", favorited && "fill-primary text-primary")} aria-hidden="true" />
+              {favorited ? "Salvo" : "Salvar"}
+            </button>
+          </div>
+          <div className="absolute bottom-5 left-6 right-6 text-white">
+            {/* O <h1> real fica no bloco do celular (indexação mobile-first); aqui é um título equivalente */}
+            <p role="heading" aria-level={1} className="m-0 text-[32px] font-extrabold leading-tight break-words drop-shadow-sm">
+              {displayLabel}
+            </p>
+            <p className="m-0 mt-1 flex items-center gap-1 text-sm text-white/95">
+              <Star className="h-3.5 w-3.5 fill-white text-white" aria-hidden="true" />
+              <span>{ratingLabel}</span>
+              <span aria-hidden="true">·</span>
+              <span>Serra Gaúcha</span>
+            </p>
+          </div>
+        </div>
 
-      <main className="container mx-auto px-4 py-4 pb-6 md:pb-8">
-        {/* Filters */}
-        {productTypes.length > 2 && (
-          <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1 scrollbar-hide">
-            <Filter className="w-4 h-4 text-muted-foreground shrink-0" />
-            {productTypes.map((type) => (
-              <Button
-                key={type}
-                variant={typeFilter === type ? "default" : "outline"}
-                size="sm"
-                className="whitespace-nowrap text-xs h-8 rounded-full"
-                onClick={() => setTypeFilter(type)}
-              >
-                {type === "todos" ? "Todos" : type}
-              </Button>
-            ))}
+        {/* Título (celular) */}
+        <div className="md:hidden">
+          <h1 className="m-0 text-[22px] font-bold leading-tight break-words">{displayLabel}</h1>
+          <p className="m-0 mt-1 flex items-center gap-1 text-sm text-muted-foreground">
+            <Star className="h-3 w-3 fill-foreground text-foreground" aria-hidden="true" />
+            <span>{ratingLabel}</span>
+            <span aria-hidden="true">·</span>
+            <span>Serra Gaúcha</span>
+          </p>
+          {pageVenue && displayEstablishment.minPrice > 0 && (
+            <p className="m-0 mt-2 text-sm text-muted-foreground">
+              A partir de{" "}
+              <span className="text-base font-bold text-foreground">
+                {(displayEstablishment.minPrice / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+              </span>
+            </p>
+          )}
+        </div>
+
+        {/* Gallery */}
+        {displayEstablishment.galleryImages && displayEstablishment.galleryImages.length > 0 && (
+          <div className="mt-4 md:mt-3.5">
+            <GalleryStrip images={displayEstablishment.galleryImages} name={displayLabel} />
           </div>
         )}
 
-        {/* 3-column layout: desktop = 2 cols products + 1 col sidebar */}
-        <div className="flex flex-col lg:flex-row gap-4">
-          {/* Products — takes 2/3 on desktop */}
-          <div className="flex-1 min-w-0 relative">
-            {/* Mapa de setores clicável (Nativitaten / Grande Desfile) */}
-            {pageVenue && (
-              <div className="mb-4 rounded-xl border border-border bg-card p-3 sm:p-4">
-                <h3 className="text-sm sm:text-base font-bold text-foreground mb-1">
-                  Selecione o setor desejado clicando no mapa abaixo
-                </h3>
-                <p className="text-[11px] sm:text-xs text-muted-foreground mb-2">
+        {/* Filtros por tipo */}
+        {productTypes.length > 2 && (
+          <div
+            role="group"
+            aria-label="Filtrar produtos por tipo"
+            className="-mx-5 mt-4 flex gap-2 overflow-x-auto px-5 pb-1 scrollbar-hide md:mx-0 md:mt-6 md:px-0"
+          >
+            {productTypes.map((type) => {
+              const active = typeFilter === type;
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setTypeFilter(type)}
+                  className={cn(
+                    "inline-flex h-11 shrink-0 items-center whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition-colors md:h-10",
+                    active
+                      ? "border-[#222222] bg-[#222222] text-white"
+                      : "border-[#dddddd] bg-white text-foreground hover:border-[#222222]",
+                  )}
+                >
+                  {type === "todos" ? "Todos" : type}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Duas colunas a partir do tablet: produtos + "Informações" */}
+        <div className="mt-4 flex flex-col gap-6 md:mt-6 md:flex-row md:items-start lg:gap-8">
+          <div className="min-w-0 flex-1">
+            {pageVenue ? (
+              /* Mapa de setores clicável (Nativitaten / Grande Desfile) + lista de ingressos */
+              <section
+                aria-labelledby="venue-sector-title"
+                className="border-t border-[#ebebeb] pt-4 md:rounded-2xl md:border md:border-[#dddddd] md:p-5 md:shadow-[0_6px_20px_rgba(0,0,0,0.08)] lg:p-6"
+              >
+                <h2 id="venue-sector-title" className="m-0 text-base font-semibold text-foreground md:text-lg md:font-extrabold">
+                  <span className="md:hidden">Selecione o setor</span>
+                  <span className="hidden md:inline">Selecione o setor desejado clicando no mapa abaixo</span>
+                </h2>
+                <p className="m-0 mt-0.5 text-[13px] text-muted-foreground md:mt-1 md:text-sm">
                   Toque em um setor colorido para ver os assentos disponíveis.
                 </p>
-                <div className="px-1" data-map-gesture-zone="true" style={{ touchAction: "pan-y" }}>
-                  <VenueSectorMap
-                    venue={pageVenue}
-                    activeSectorId={sectorFilter}
-                    onSectorClick={handleSectorClick}
-                    className="h-auto w-full max-h-[240px] sm:max-h-[340px] lg:max-h-[420px] rounded-lg"
-                  />
-                </div>
-                <div className="mt-3 flex flex-wrap gap-1.5 sm:gap-2">
-                  {pageVenue.sectors.filter((s) => s.sellable).map((s) => (
-                    <button
-                      key={s.id}
-                      type="button"
-                      onClick={() => handleSectorClick(s.id)}
-                      className={`flex items-center gap-1 text-[10px] sm:text-[11px] font-semibold px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-full border transition-colors ${
-                        sectorFilter === s.id
-                          ? "border-foreground/60 bg-muted text-foreground"
-                          : "border-border text-muted-foreground hover:bg-muted"
-                      }`}
-                    >
-                      <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: s.color }} />
-                      {s.label}
-                      {sectorFilter === s.id && " ✕"}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
+                <div className="mt-3 flex flex-col md:mt-3.5">
+                  <div
+                    className="rounded-2xl bg-[#f3f6f8] p-2 md:p-3"
+                    data-map-gesture-zone="true"
+                    style={{ touchAction: "pan-y" }}
+                  >
+                    <VenueSectorMap
+                      venue={pageVenue}
+                      activeSectorId={sectorFilter}
+                      onSectorClick={handleSectorClick}
+                      className="h-auto w-full max-h-[240px] sm:max-h-[340px] lg:max-h-[420px] rounded-lg"
+                    />
+                  </div>
+                  {/* Setores: no celular, pílulas roláveis acima do mapa; no desktop, legenda abaixo */}
+                  <div
+                    role="group"
+                    aria-label="Setores"
+                    className="order-first -mx-5 mb-3 flex gap-2 overflow-x-auto px-5 pb-1 scrollbar-hide md:order-none md:mx-0 md:mb-0 md:mt-3.5 md:flex-wrap md:overflow-visible md:px-0 md:pb-0"
+                  >
+                    {pageVenue.sectors.filter((s) => s.sellable).map((s) => {
+                      const active = sectorFilter === s.id;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          aria-pressed={active}
+                          onClick={() => handleSectorClick(s.id)}
+                          className={cn(
+                            "inline-flex h-11 shrink-0 items-center gap-[7px] whitespace-nowrap rounded-full border px-4 text-[13px] font-semibold transition-colors md:h-9 md:px-3",
+                            active
+                              ? "border-[#222222] bg-[#222222] text-white"
+                              : "border-[#dddddd] bg-white text-foreground hover:border-[#222222]",
+                          )}
+                        >
+                          <span className="h-[9px] w-[9px] shrink-0 rounded-full md:h-2.5 md:w-2.5" style={{ background: s.color }} aria-hidden="true" />
+                          {s.label}
+                          {active && <X className="h-3.5 w-3.5" aria-hidden="true" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-4 md:mt-[18px]">{productList}</div>
+              </section>
+            ) : (
+              productList
             )}
 
-            
-            {/* Loading overlay — only covers products, not the whole page */}
-            {productsLoading && (
-              <div className="absolute inset-0 z-10 bg-background/60 backdrop-blur-[2px] rounded-xl flex items-center justify-center">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="h-6 w-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                  <span className="text-xs text-muted-foreground">Atualizando produtos…</span>
-                </div>
-              </div>
-            )}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {filteredProducts.map((product, index) => (
-                <ProductCard
-                  key={product.id || product.path}
-                  product={product}
-                  index={index}
-                  selectedDate={selectedDate}
-                  productPrices={productPrices}
-                  establishmentId={displayEstablishment?.id}
-                  establishmentName={displayEstablishment?.displayName || displayEstablishment?.name}
-                  requiresSeatSelection={productRequiresSeatSelection(displayEstablishment, product)}
-                  onOpenSeatMap={openSeatMapFor}
-                />
-              ))}
-              {/* Enquanto a API ainda está respondendo e não temos produtos do estabelecimento,
-                  mostramos skeletons em vez de "Nenhum produto encontrado" — evita confundir
-                  o visitante que entra direto na página. */}
-              {filteredProducts.length === 0 && (productsLoading || loading || availabilityLoading || !hasResolvedMonth) && (
-                <>
-                  {[...Array(4)].map((_, i) => (
-                    <Skeleton key={`prod-skel-${i}`} className="h-56 rounded-xl" />
-                  ))}
-                </>
-              )}
-            </div>
-
-            {filteredProducts.length === 0 && !productsLoading && !loading && !availabilityLoading && hasResolvedMonth && (
-              <div className="text-center py-12">
-                {sectorFilter && pageVenue ? (
-                  <>
-                    <p className="text-muted-foreground">
-                      Nenhum ingresso do setor{" "}
-                      <strong>{pageVenue.sectors.find((s) => s.id === sectorFilter)?.label}</strong>{" "}
-                      disponível para esta data.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => setSectorFilter(null)}
-                      className="mt-3 text-sm font-semibold text-primary underline underline-offset-4"
-                    >
-                      Ver todos os setores
-                    </button>
-                  </>
-                ) : (
-                  <p className="text-muted-foreground">Nenhum produto encontrado para este filtro.</p>
-                )}
-              </div>
-            )}
-
+            {/* Informações (celular): cartões com borda clara abaixo dos produtos */}
+            <section className="mt-8 md:hidden" aria-labelledby="info-title-mobile">
+              <h2 id="info-title-mobile" className="m-0 mb-2.5 text-lg font-bold text-foreground">Informações</h2>
+              <EstablishmentInfoSections establishment={displayEstablishment} variant="cards" />
+            </section>
           </div>
 
-          {/* Sidebar — calendar + info (desktop only) */}
-          <aside className="hidden lg:block w-[340px] xl:w-[380px] shrink-0">
-            <h2 className="text-lg font-bold text-foreground mb-3">Informações</h2>
-            <div className="lg:sticky lg:top-4 space-y-4">
-              <ParksnetCalendar
-                selectedDate={selectedDate}
-                onDateChange={setSelectedDate}
-                minPriceCents={displayEstablishment.minPrice}
-                availableDates={availableDates}
-                dayPrices={dayPrices}
-                availabilityLoading={availabilityLoading}
-                hasResolvedMonth={hasResolvedMonth}
-                onMonthChange={setCalendarMonth}
-                allowedMonths={allowedMonths}
-              />
-              <EstablishmentSidebar establishment={displayEstablishment} />
+          {/* Sidebar — calendário + informações (tablet e desktop) */}
+          <aside className="hidden w-[300px] shrink-0 md:block lg:w-[340px] xl:w-[380px]" aria-labelledby="info-title-desktop">
+            <h2 id="info-title-desktop" className="m-0 mb-3 text-lg font-extrabold text-foreground">Informações</h2>
+            <div className="space-y-4 lg:sticky lg:top-4">
+              {/* Embrulha o calendário (compartilhado com outras páginas) só para o visual novo */}
+              <div className="[&>div]:max-w-none [&>div]:rounded-2xl [&>div]:border-[#dddddd] [&>div]:p-5 [&>div]:shadow-[0_6px_20px_rgba(0,0,0,0.08)]">
+                <ParksnetCalendar
+                  selectedDate={selectedDate}
+                  onDateChange={setSelectedDate}
+                  minPriceCents={displayEstablishment.minPrice}
+                  availableDates={availableDates}
+                  dayPrices={dayPrices}
+                  availabilityLoading={availabilityLoading}
+                  hasResolvedMonth={hasResolvedMonth}
+                  onMonthChange={setCalendarMonth}
+                  allowedMonths={allowedMonths}
+                />
+              </div>
+              <EstablishmentInfoSections establishment={displayEstablishment} variant="list" />
             </div>
           </aside>
         </div>
-
-        {/* Mobile: EstablishmentSidebar below products */}
-        <div className="lg:hidden mt-4">
-          <h2 className="text-lg font-bold text-foreground mb-3">Informações</h2>
-          <EstablishmentSidebar establishment={displayEstablishment} />
-        </div>
       </main>
-
 
       {/* Mobile buy/date drawer (shared for floating button and product 'Comprar') */}
       {isMobile && (
@@ -1208,12 +1380,12 @@ const Estabelecimento = () => {
       })()}
 
       <Footer />
-      <CategoryNav />
+      <HomeBottomNav />
     </div>
   );
 };
 
-function ProductCard({ product, index, selectedDate, productPrices, establishmentId, establishmentName, requiresSeatSelection, onOpenSeatMap }: { product: NovaxsProduct; index: number; selectedDate: Date | null; productPrices?: import("@/hooks/useEstablishmentAvailability").ProductDayPriceMap; establishmentId?: string; establishmentName?: string; requiresSeatSelection?: boolean; onOpenSeatMap?: (product: NovaxsProduct, date: Date, schedule: string | null, priceCents: number) => void }) {
+function ProductCard({ product, index, selectedDate, productPrices, establishmentId, establishmentName, requiresSeatSelection, onOpenSeatMap, variant = "card" }: { variant?: "card" | "row"; product: NovaxsProduct; index: number; selectedDate: Date | null; productPrices?: import("@/hooks/useEstablishmentAvailability").ProductDayPriceMap; establishmentId?: string; establishmentName?: string; requiresSeatSelection?: boolean; onOpenSeatMap?: (product: NovaxsProduct, date: Date, schedule: string | null, priceCents: number) => void }) {
   const navigate = useNavigate();
   const { addItem } = useCart();
   const { toast } = useToast();
@@ -1366,14 +1538,92 @@ function ProductCard({ product, index, selectedDate, productPrices, establishmen
     });
   };
 
+  // Detalhes que aparecem ao expandir (descrição completa + aviso de agendamento manual).
+  const expandedDetails = (
+    <>
+      {expanded && cleanDescription ? (
+        <div
+          className="text-xs text-muted-foreground mb-3 prose prose-xs max-w-none [&_p]:mb-1 [&_ul]:mb-1 [&_li]:mb-0.5 animate-in fade-in duration-200"
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+        />
+      ) : null}
+      {expanded && isManualScheduling && (
+        <div className="mb-3 animate-in fade-in duration-200">
+          <ManualSchedulingNotice />
+        </div>
+      )}
+    </>
+  );
+
+  // Linha de ingresso (eventos com setores — Nativitaten / Grande Desfile):
+  // nome à esquerda; preço em negrito + "Comprar" à direita; divisória fina.
+  if (variant === "row") {
+    return (
+      <div
+        className="border-t border-[#ebebeb] animate-in fade-in duration-300"
+        style={{ animationDelay: `${index * 40}ms`, animationFillMode: "both" }}
+      >
+        <div className="flex items-center justify-between gap-3 py-2.5 md:py-3">
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            className="min-h-[44px] min-w-0 flex-1 text-left"
+          >
+            <span className="block text-sm font-medium leading-snug text-foreground md:text-[15px] md:font-semibold">
+              {product.name}
+            </span>
+            {isSoldOut ? (
+              <span className="mt-0.5 block text-xs font-semibold text-destructive">
+                Esgotado{selectedDate ? ` em ${format(selectedDate, "dd/MM/yyyy")}` : ""}
+              </span>
+            ) : nextAvailable ? (
+              <span className="mt-0.5 block text-xs font-medium text-amber-600">
+                Próxima data: {format(nextAvailable.date, "dd/MM/yyyy")}
+              </span>
+            ) : null}
+          </button>
+
+          <div className="flex shrink-0 items-center gap-3 md:gap-3.5">
+            {!isSoldOut && displayPriceCents > 0 ? (
+              <div className="text-right leading-tight">
+                {oldPriceFormatted && (
+                  <div className="text-[11px] text-muted-foreground line-through">De: {oldPriceFormatted}</div>
+                )}
+                <span className="text-[15px] font-bold text-foreground md:text-base">{priceFormatted}</span>
+              </div>
+            ) : !isSoldOut ? (
+              <span className="text-sm font-semibold text-muted-foreground">Consultar preço</span>
+            ) : null}
+
+            {isSoldOut ? (
+              <Button size="sm" variant="secondary" disabled className="h-11 rounded-full px-4 text-[13px] md:h-10">
+                Indisponível
+              </Button>
+            ) : displayPriceCents > 0 ? (
+              <Button
+                size="sm"
+                className="h-11 rounded-full bg-primary px-4 text-[13px] font-semibold text-primary-foreground hover:bg-primary/90 md:h-10 md:px-[18px] md:text-sm"
+                onClick={handleBuyClick}
+              >
+                {nextAvailable ? "Ver data" : "Comprar"}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+        {(expanded && (cleanDescription || isManualScheduling)) ? <div className="pb-1">{expandedDetails}</div> : null}
+      </div>
+    );
+  }
+
   return (
     <div
-      className={`bg-card rounded-xl shadow-sm overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer transition-shadow hover:shadow-md ${expanded ? "ring-1 ring-primary/20" : ""}`}
+      className={`bg-card rounded-2xl shadow-[0_1px_8px_rgba(0,0,0,0.1)] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300 cursor-pointer transition-shadow hover:shadow-[0_4px_18px_rgba(0,0,0,0.12)] ${expanded ? "ring-1 ring-primary/20" : ""}`}
       style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
       onClick={() => setExpanded(!expanded)}
     >
       {product.image && (
-        <div className="relative overflow-hidden transition-all duration-300 h-48 md:h-56">
+        <div className="relative overflow-hidden transition-all duration-300 h-[170px] md:h-48">
           <img
             src={product.image}
             alt={product.name}
@@ -1381,39 +1631,27 @@ function ProductCard({ product, index, selectedDate, productPrices, establishmen
             loading="lazy"
           />
           {isSoldOut && (
-            <span className="absolute top-2 left-2 rounded-full bg-destructive px-2.5 py-1 text-[11px] font-bold text-destructive-foreground shadow">
+            <span className="absolute top-2.5 left-2.5 rounded-full bg-destructive px-2.5 py-1 text-[11px] font-bold text-destructive-foreground shadow">
               Esgotado
             </span>
           )}
           {!isSoldOut && nextAvailable && (
-            <span className="absolute top-2 left-2 rounded-full bg-amber-500 px-2.5 py-1 text-[11px] font-bold text-white shadow">
+            <span className="absolute top-2.5 left-2.5 rounded-full bg-white px-2.5 py-1 text-[11px] font-bold text-amber-700 shadow">
               Disponível em {format(nextAvailable.date, "dd/MM")}
             </span>
           )}
 
         </div>
       )}
-      <div className="p-3">
-        <h3 className="font-semibold text-sm mb-1 line-clamp-2 text-foreground">{product.name}</h3>
-        {cleanDescription ? (
-          !expanded ? (
-            <p className="text-xs text-muted-foreground line-clamp-2 mb-2.5">{cleanDescription}</p>
-          ) : (
-            <div
-              className="text-xs text-muted-foreground mb-3 prose prose-xs max-w-none [&_p]:mb-1 [&_ul]:mb-1 [&_li]:mb-0.5 animate-in fade-in duration-200"
-              dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
-            />
-          )
+      <div className="px-3.5 pt-3 pb-3.5">
+        <h3 className="m-0 font-semibold text-sm mb-1 line-clamp-2 text-foreground">{product.name}</h3>
+        {cleanDescription && !expanded ? (
+          <p className="m-0 text-xs text-muted-foreground line-clamp-2 mb-2.5">{cleanDescription}</p>
         ) : null}
+        {expandedDetails}
 
-        {expanded && isManualScheduling && (
-          <div className="mb-3 animate-in fade-in duration-200">
-            <ManualSchedulingNotice />
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <div>
+        <div className="mt-2.5 flex items-center justify-between gap-2">
+          <div className="min-w-0">
             {isSoldOut ? (
               <>
                 <div className="text-[10px] text-muted-foreground leading-none mb-0.5">
@@ -1434,7 +1672,7 @@ function ProductCard({ product, index, selectedDate, productPrices, establishmen
                 {oldPriceFormatted && (
                   <div className="text-[10px] text-muted-foreground leading-none mt-0.5">A partir de</div>
                 )}
-                <span className="text-base font-extrabold text-primary">{priceFormatted}</span>
+                <span className="text-[17px] font-bold text-primary">{priceFormatted}</span>
               </>
             ) : (
               <span className="text-base font-bold text-muted-foreground">Consultar preço</span>
@@ -1442,16 +1680,16 @@ function ProductCard({ product, index, selectedDate, productPrices, establishmen
 
           </div>
           {isSoldOut ? (
-            <Button size="sm" variant="secondary" disabled className="h-8 text-xs rounded-full px-3">
+            <Button size="sm" variant="secondary" disabled className="h-11 shrink-0 rounded-full px-4 text-[13px] md:h-9">
               Indisponível
             </Button>
           ) : displayPriceCents > 0 ? (
             <Button
               size="sm"
-              className="h-8 text-xs rounded-full px-3 bg-primary hover:bg-primary/90 text-primary-foreground"
+              className="h-11 shrink-0 gap-1.5 rounded-full px-4 text-[13px] font-semibold bg-primary hover:bg-primary/90 text-primary-foreground md:h-9"
               onClick={handleBuyClick}
             >
-              <ShoppingCart className="w-3.5 h-3.5 mr-1" />
+              <ShoppingCart className="w-3.5 h-3.5" aria-hidden="true" />
               {nextAvailable ? "Ver data" : "Comprar"}
             </Button>
           ) : null}
@@ -1745,12 +1983,12 @@ function GalleryStrip({ images, name }: { images: string[]; name: string }) {
 
   return (
     <>
-      <div className="container mx-auto px-4 pt-4">
+      <div className="-mx-5 md:mx-0">
         <div className="relative group" data-map-gesture-zone="true">
           <button
             onClick={() => scroll("left")}
             aria-label="Imagem anterior"
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
+            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full border border-[#dddddd] bg-white shadow-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hidden md:flex"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -1770,7 +2008,7 @@ function GalleryStrip({ images, name }: { images: string[]; name: string }) {
               scrollbarWidth: "none",
               msOverflowStyle: "none",
             }}
-            className="flex gap-2 overflow-x-auto scrollbar-hide pb-0 select-none [&::-webkit-scrollbar]:hidden"
+            className="flex gap-2 overflow-x-auto scrollbar-hide pb-0 px-5 md:gap-2.5 md:px-0 select-none [&::-webkit-scrollbar]:hidden"
           >
             {images.map((url, i) => (
               <button
@@ -1800,7 +2038,8 @@ function GalleryStrip({ images, name }: { images: string[]; name: string }) {
                   WebkitUserSelect: "none",
                   userSelect: "none",
                 }}
-                className="shrink-0 rounded-lg overflow-hidden h-24 w-36 md:h-32 md:w-48 focus:ring-2 focus:ring-primary transition-transform hover:scale-[1.02] cursor-pointer touch-manipulation"
+                aria-label={`Ampliar foto ${i + 1} de ${name}`}
+                className="shrink-0 rounded-xl overflow-hidden h-[88px] w-[120px] md:h-[110px] md:w-[190px] md:rounded-2xl bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary transition-transform hover:scale-[1.02] cursor-pointer touch-manipulation"
               >
                 <img
                   src={url}
@@ -1816,7 +2055,7 @@ function GalleryStrip({ images, name }: { images: string[]; name: string }) {
           <button
             onClick={() => scroll("right")}
             aria-label="Próxima imagem"
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background/80 backdrop-blur-sm rounded-full p-1.5 shadow-md opacity-0 group-hover:opacity-100 transition-opacity hidden md:block"
+            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 h-9 w-9 items-center justify-center rounded-full border border-[#dddddd] bg-white shadow-md opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity hidden md:flex"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
