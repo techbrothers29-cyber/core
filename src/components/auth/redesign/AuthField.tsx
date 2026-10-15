@@ -42,7 +42,7 @@ interface AuthFieldShellProps {
 
 /** Rótulo + área do controle. Use direto quando o controle não for um <input> (ex.: Select). */
 export const AuthFieldShell = ({ htmlFor, label, hint, hintId, children }: AuthFieldShellProps) => (
-  <div className="relative bg-background px-3.5 py-2.5 focus-within:z-10 focus-within:ring-2 focus-within:ring-inset focus-within:ring-foreground md:p-0 md:focus-within:ring-0">
+  <div className="relative bg-background md:bg-transparent px-3.5 py-2.5 focus-within:z-10 focus-within:ring-2 focus-within:ring-inset focus-within:ring-foreground md:p-0 md:focus-within:ring-0">
     <label
       htmlFor={htmlFor}
       className="block text-[11px] leading-4 text-[#6b6b6b] dark:text-muted-foreground md:mb-1.5 md:text-[13px] md:font-semibold md:text-foreground"
