@@ -2,6 +2,7 @@
 export const HOTEL_DESTINATIONS = [
   { value: 'gramado', label: 'Gramado, RS', center: { lat: -29.3773, lng: -50.8765 } },
   { value: 'canela', label: 'Canela, RS', center: { lat: -29.3656, lng: -50.8114 } },
+  { value: 'porto-alegre', label: 'Porto Alegre, RS', center: { lat: -30.0346, lng: -51.2177 } },
   { value: 'florianopolis', label: 'Florianópolis, SC', center: { lat: -27.5954, lng: -48.5480 } },
   { value: 'balneario-camboriu', label: 'Balneário Camboriú, SC', center: { lat: -26.9906, lng: -48.6346 } },
   { value: 'bombinhas', label: 'Bombinhas, SC', center: { lat: -27.1382, lng: -48.5176 } },
