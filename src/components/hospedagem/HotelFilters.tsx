@@ -1,35 +1,27 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useEffect, useMemo, useState } from "react";
 import { Slider } from "@/components/ui/slider";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, DollarSign, Building, SlidersHorizontal, Wifi, UtensilsCrossed, Car, Snowflake } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Star, Wifi, Car, Snowflake, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { HotelFilters as FiltersType } from "@/pages/Hospedagem";
-
-const PRICE_MIN = 0;
-const PRICE_MAX = 5000;
+import type { Hotel, HotelFilters as FiltersType } from "@/pages/Hospedagem";
 
 export type HotelSortMode = "default" | "price" | "rating" | "popular";
 
 interface HotelFiltersProps {
   filters: FiltersType;
   onFilterChange: (filters: FiltersType) => void;
-  onApplyFilters: () => void;
+  /** Resultados da busca atual (filtros e contagens são calculados sobre eles, sem nova consulta à API). */
+  hotels: Hotel[];
+  /** Quantos hotéis sobram com os filtros atuais. */
+  resultCount: number;
+  /** Fecha o painel. */
+  onDone: () => void;
   sortMode?: HotelSortMode;
   onSortChange?: (mode: HotelSortMode) => void;
 }
 
-// Decorative histogram bars (simulated price distribution)
-const HISTOGRAM_BARS = [
-  15, 25, 35, 20, 45, 55, 40, 60, 75, 85, 95, 100, 90, 80, 70, 65,
-  55, 50, 45, 40, 35, 30, 25, 20, 18, 15, 12, 10, 8, 5,
-];
-
 // Opções compartilhadas com os chips de filtro da página de resultados.
-// ETG "kind" values
+// "kind" e "star_rating" seguem os valores do conteúdo da ETG/RateHawk (star_rating 0 = sem classificação).
 export const HOTEL_PROPERTY_TYPES = [
   { id: "Hotel", label: "Hotel" },
   { id: "Guesthouse", label: "Pousada" },
@@ -39,7 +31,6 @@ export const HOTEL_PROPERTY_TYPES = [
   { id: "Villa", label: "Chalé / Villa" },
 ];
 
-// ETG star_rating: 1–5 (0 = sem classificação)
 export const HOTEL_STAR_OPTIONS = [
   { value: 5, label: "5 estrelas" },
   { value: 4, label: "4 estrelas" },
@@ -47,275 +38,271 @@ export const HOTEL_STAR_OPTIONS = [
   { value: 2, label: "2 estrelas" },
 ];
 
-// ETG serp_filter amenities
+// Comodidades do hotel (amenity_groups). Café da manhã NÃO entra aqui: pela regra da RateHawk,
+// a refeição é da tarifa (meal_data) e só pode ser informada a partir dela, não das comodidades do hotel.
 export const HOTEL_AMENITY_FILTERS = [
-  { id: "has_breakfast", label: "Café da manhã", icon: UtensilsCrossed },
   { id: "has_internet", label: "Wi-Fi", icon: Wifi },
   { id: "has_parking", label: "Estacionamento", icon: Car },
   { id: "air_conditioning", label: "Ar-condicionado", icon: Snowflake },
 ];
 
-export const HOTEL_PRICE_MAX = PRICE_MAX;
+export const HOTEL_AMENITY_KEYWORDS: Record<string, string[]> = {
+  has_internet: ["wi-fi", "wifi", "internet"],
+  has_parking: ["estacionamento", "parking"],
+  air_conditioning: ["ar-condicionado", "ar condicionado", "air condition"],
+};
 
-const HotelFilters = ({ filters, onFilterChange, onApplyFilters, sortMode, onSortChange }: HotelFiltersProps) => {
-  const [priceRange, setPriceRange] = useState([filters.price_from ?? 0, filters.price_to ?? 5000]);
+export const HOTEL_PRICE_MAX = 5000;
 
-  const sortOptions: { id: HotelSortMode; label: string }[] = [
-    { id: "price", label: "Menor preço" },
-    { id: "rating", label: "Nota" },
-    { id: "popular", label: "Mais reservados" },
-  ];
+/** Preço por noite exibido nos cards (é sobre ele que o filtro de preço age). */
+export const nightlyPrice = (h: Hotel) => Number(h.pricePerNight || h.price || 0);
 
-  const handleClearFilters = () => {
-    setPriceRange([0, 5000]);
+export const hotelHasAmenity = (h: Hotel, id: string) => {
+  const keywords = HOTEL_AMENITY_KEYWORDS[id];
+  if (!keywords) return true; // filtro antigo/desconhecido (ex.: has_breakfast salvo) não esconde hotéis
+  const list = (h.amenities || []).map((a) => String(a).toLowerCase());
+  return keywords.some((kw) => list.some((a) => a.includes(kw)));
+};
+
+const BINS = 28;
+const fmt = (v: number) => `R$ ${Math.round(v).toLocaleString("pt-BR")}`;
+
+const sortOptions: { id: HotelSortMode; label: string }[] = [
+  { id: "price", label: "Menor preço" },
+  { id: "rating", label: "Mais estrelas" },
+  { id: "popular", label: "Mais reservados" },
+];
+
+const pill = (active: boolean) =>
+  cn(
+    "inline-flex h-10 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-1",
+    active ? "border-[#1f1f1f] bg-[#1f1f1f] text-white" : "border-[#dddddd] bg-background text-foreground hover:border-[#1f1f1f]"
+  );
+
+const Section = ({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) => (
+  <section className="border-b border-[#ebebeb] py-6 first:pt-2 last:border-b-0">
+    <h3 className="m-0 text-[17px] font-bold">{title}</h3>
+    {hint && <p className="m-0 mt-1 text-[13px] text-muted-foreground">{hint}</p>}
+    <div className="mt-4">{children}</div>
+  </section>
+);
+
+const HotelFilters = ({ filters, onFilterChange, hotels, resultCount, onDone, sortMode = "default", onSortChange }: HotelFiltersProps) => {
+  const prices = useMemo(() => hotels.map(nightlyPrice).filter((p) => p > 0), [hotels]);
+  const priceMax = useMemo(
+    () => (prices.length ? Math.max(100, Math.ceil(Math.max(...prices) / 100) * 100) : HOTEL_PRICE_MAX),
+    [prices]
+  );
+  const step = priceMax > 2000 ? 50 : 10;
+
+  // Histograma real dos preços por noite desta busca
+  const bins = useMemo(() => {
+    const counts = new Array(BINS).fill(0);
+    for (const p of prices) counts[Math.min(BINS - 1, Math.floor((p / priceMax) * BINS))]++;
+    const top = Math.max(1, ...counts);
+    return counts.map((c) => (c === 0 ? 0 : Math.max(8, (c / top) * 100)));
+  }, [prices, priceMax]);
+
+  const [range, setRange] = useState<[number, number]>([filters.price_from ?? 0, Math.min(filters.price_to ?? priceMax, priceMax)]);
+  useEffect(() => {
+    setRange([filters.price_from ?? 0, Math.min(filters.price_to ?? priceMax, priceMax)]);
+  }, [filters.price_from, filters.price_to, priceMax]);
+
+  const commitPrice = ([from, to]: number[]) =>
+    onFilterChange({
+      ...filters,
+      price_from: from > 0 ? from : undefined,
+      price_to: to < priceMax ? to : undefined,
+    });
+
+  const toggle = <K extends "star_rating" | "kind" | "serp_filter">(key: K, value: NonNullable<FiltersType[K]>[number]) => {
+    const current = (filters[key] || []) as (typeof value)[];
+    const next = current.includes(value) ? current.filter((v) => v !== value) : [...current, value];
+    onFilterChange({ ...filters, [key]: next.length ? next : undefined });
+  };
+
+  // Contagens sobre os resultados (só mostramos opções que existem nesta busca)
+  const starCount = (s: number) => hotels.filter((h) => Math.floor(h.rating) === s).length;
+  const kindCount = (k: string) => hotels.filter((h) => h.propertyType?.toLowerCase().includes(k.toLowerCase())).length;
+  const amenityCount = (id: string) => hotels.filter((h) => hotelHasAmenity(h, id)).length;
+  const freeCancelCount = hotels.filter((h) => h.freeCancellation).length;
+
+  const kinds = HOTEL_PROPERTY_TYPES.map((t) => ({ ...t, n: kindCount(t.id) })).filter((t) => t.n > 0 || filters.kind?.includes(t.id));
+  const stars = HOTEL_STAR_OPTIONS.map((s) => ({ ...s, n: starCount(s.value) })).filter((s) => s.n > 0 || filters.star_rating?.includes(s.value));
+  const amenities = HOTEL_AMENITY_FILTERS.map((a) => ({ ...a, n: amenityCount(a.id) })).filter((a) => a.n > 0 || filters.serp_filter?.includes(a.id));
+
+  const hasAny =
+    Object.values(filters).some((v) => (Array.isArray(v) ? v.length > 0 : v != null && v !== false)) || sortMode !== "default";
+
+  const clearAll = () => {
     onFilterChange({});
     onSortChange?.("default");
   };
 
-  const propertyTypes = HOTEL_PROPERTY_TYPES;
-  const ratingOptions = HOTEL_STAR_OPTIONS;
-  const amenityFilters = HOTEL_AMENITY_FILTERS;
-
-  // Price slider updates local state only — committed on "Aplicar filtros"
-  const handlePriceChange = (values: number[]) => {
-    const sorted = [Math.min(values[0], values[1]), Math.max(values[0], values[1])];
-    setPriceRange(sorted);
-  };
-
-  const committedFrom = filters.price_from ?? PRICE_MIN;
-  const committedTo = filters.price_to ?? PRICE_MAX;
-  const hasPendingPrice = priceRange[0] !== committedFrom || priceRange[1] !== committedTo;
-
-  const handleApply = () => {
-    onFilterChange({
-      ...filters,
-      price_from: priceRange[0] > PRICE_MIN ? priceRange[0] : undefined,
-      price_to: priceRange[1] < PRICE_MAX ? priceRange[1] : undefined,
-    });
-    // Let the parent commit the new filters before running the search
-    setTimeout(() => onApplyFilters(), 0);
-  };
-
-  const toggleStarRating = (star: number) => {
-    const current = filters.star_rating || [];
-    const updated = current.includes(star)
-      ? current.filter((s) => s !== star)
-      : [...current, star];
-    onFilterChange({ ...filters, star_rating: updated.length > 0 ? updated : undefined });
-  };
-
-  const toggleKind = (kind: string) => {
-    const current = filters.kind || [];
-    const updated = current.includes(kind)
-      ? current.filter((k) => k !== kind)
-      : [...current, kind];
-    onFilterChange({ ...filters, kind: updated.length > 0 ? updated : undefined });
-  };
-
-  const toggleSerpFilter = (filterId: string) => {
-    const current = filters.serp_filter || [];
-    const updated = current.includes(filterId)
-      ? current.filter((f) => f !== filterId)
-      : [...current, filterId];
-    onFilterChange({ ...filters, serp_filter: updated.length > 0 ? updated : undefined });
-  };
-
   return (
-    <Card className="sticky top-24 border-border/50 flex flex-col max-h-[calc(100vh-7rem)]">
-      <CardHeader className="pb-4 shrink-0">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <SlidersHorizontal className="h-5 w-5 text-primary" />
-          Filtros
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5 overflow-y-auto overscroll-contain pr-3 [scrollbar-width:thin] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-border">
-        {onSortChange && (
-          <>
-            <div>
-              <h4 className="font-medium text-foreground mb-3">Ordenar por</h4>
-              <div className="flex flex-wrap gap-2">
-                {sortOptions.map((option) => {
-                  const isActive = sortMode === option.id;
-                  return (
-                    <button
-                      key={option.id}
-                      onClick={() => onSortChange(isActive ? "default" : option.id)}
-                      className={`px-3 py-1.5 rounded-full border text-sm transition-colors ${
-                        isActive
-                          ? "border-primary bg-primary/10 text-primary"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <Separator />
-          </>
+    <div className="flex h-full min-h-0 flex-col font-jakarta text-foreground">
+      <div className="flex shrink-0 items-center justify-between border-b border-[#ebebeb] px-5 pb-3 md:px-6">
+        <h2 className="m-0 text-lg font-bold">Filtros</h2>
+        {hasAny && (
+          <button type="button" onClick={clearAll} className="mr-8 text-sm font-semibold underline underline-offset-2 hover:text-primary">
+            Limpar tudo
+          </button>
         )}
-        {/* Price Range — tech panel, applied only via "Aplicar filtros" */}
-        <div className="rounded-xl border border-border/60 bg-gradient-to-b from-primary/[0.05] to-transparent p-3">
-          <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
-            <DollarSign className="h-4 w-4 text-primary" />
-            Faixa de preço
-          </h4>
+      </div>
 
-          {/* Digital readout */}
-          <div className="grid grid-cols-2 gap-2 mb-4">
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 md:px-6" style={{ WebkitOverflowScrolling: "touch" }}>
+        {onSortChange && (
+          <Section title="Ordenar por">
+            <div className="flex flex-wrap gap-2">
+              {sortOptions.map((o) => (
+                <button key={o.id} type="button" aria-pressed={sortMode === o.id} className={pill(sortMode === o.id)} onClick={() => onSortChange(sortMode === o.id ? "default" : o.id)}>
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </Section>
+        )}
+
+        <Section title="Preço por noite" hint="Valor final por noite, com impostos e taxas inclusos.">
+          <div className="flex h-16 items-end gap-[2px]" aria-hidden="true">
+            {bins.map((h, i) => {
+              const start = (i / BINS) * priceMax;
+              const end = ((i + 1) / BINS) * priceMax;
+              const inRange = end > range[0] && start < range[1];
+              return (
+                <div
+                  key={i}
+                  className={cn("flex-1 rounded-t-[3px]", inRange ? "bg-primary" : "bg-[#dddddd]")}
+                  style={{ height: `${h}%` }}
+                />
+              );
+            })}
+          </div>
+          <Slider
+            value={range}
+            onValueChange={(v) => setRange([Math.min(v[0], v[1]), Math.max(v[0], v[1])])}
+            onValueCommit={commitPrice}
+            min={0}
+            max={priceMax}
+            step={step}
+            minStepsBetweenThumbs={1}
+            className="-mt-1"
+            aria-label="Faixa de preço por noite"
+          />
+          <div className="mt-5 grid grid-cols-2 gap-3">
             {[
-              { label: "Mín", value: priceRange[0] },
-              { label: "Máx", value: priceRange[1] },
-            ].map((item) => (
-              <div
-                key={item.label}
-                className="rounded-lg border border-primary/20 bg-background/60 px-2.5 py-1.5 shadow-[inset_0_0_12px_hsl(var(--primary)/0.06)]"
-              >
-                <span className="block text-[9px] uppercase tracking-[0.2em] text-muted-foreground">
-                  {item.label}
-                </span>
-                <span className="block font-mono text-sm font-bold tabular-nums text-primary">
-                  R$ {item.value.toLocaleString('pt-BR')}
+              { label: "Mínimo", value: range[0] },
+              { label: "Máximo", value: range[1], plus: range[1] >= priceMax },
+            ].map((b) => (
+              <div key={b.label} className="rounded-xl border border-[#dddddd] px-4 py-2.5">
+                <span className="block text-xs text-muted-foreground">{b.label}</span>
+                <span className="block text-[15px] font-semibold tabular-nums">
+                  {fmt(b.value)}
+                  {b.plus ? "+" : ""}
                 </span>
               </div>
             ))}
           </div>
+        </Section>
 
-          {/* Histogram + Slider — bars light up inside the selected range */}
-          <div>
-            <div className="flex items-end gap-[1.5px] h-14 px-1 mb-1">
-              {HISTOGRAM_BARS.map((height, i) => {
-                const barStart = (i / HISTOGRAM_BARS.length) * PRICE_MAX;
-                const barEnd = ((i + 1) / HISTOGRAM_BARS.length) * PRICE_MAX;
-                const inRange = barEnd > priceRange[0] && barStart < priceRange[1];
+        {freeCancelCount > 0 || filters.free_cancellation ? (
+          <Section title="Flexibilidade">
+            <label className="flex cursor-pointer items-center justify-between gap-4">
+              <span>
+                <span className="block text-[15px] font-medium">Cancelamento grátis</span>
+                <span className="block text-[13px] text-muted-foreground">
+                  Tarifa com cancelamento sem custo até a data informada na reserva · {freeCancelCount}
+                </span>
+              </span>
+              <Switch
+                checked={!!filters.free_cancellation}
+                onCheckedChange={(v) => onFilterChange({ ...filters, free_cancellation: v || undefined })}
+              />
+            </label>
+          </Section>
+        ) : null}
+
+        {stars.length > 0 && (
+          <Section title="Classificação do hotel">
+            <div className="flex flex-wrap gap-2">
+              {stars.map((s) => {
+                const active = !!filters.star_rating?.includes(s.value);
                 return (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex-1 rounded-t-[2px] transition-all duration-300",
-                      inRange
-                        ? "bg-gradient-to-t from-primary/60 to-primary shadow-[0_0_6px_hsl(var(--primary)/0.45)]"
-                        : "bg-muted-foreground/15"
-                    )}
-                    style={{ height: `${height}%` }}
-                  />
+                  <button key={s.value} type="button" aria-pressed={active} aria-label={`${s.label} (${s.n})`} className={pill(active)} onClick={() => toggle("star_rating", s.value)}>
+                    {s.value}
+                    <Star className={cn("h-3.5 w-3.5", active ? "fill-white text-white" : "fill-foreground text-foreground")} aria-hidden="true" />
+                    <span className={cn("text-xs", active ? "text-white/70" : "text-muted-foreground")}>{s.n}</span>
+                  </button>
                 );
               })}
             </div>
+          </Section>
+        )}
 
-            <Slider
-              value={priceRange}
-              onValueChange={handlePriceChange}
-              max={PRICE_MAX}
-              min={PRICE_MIN}
-              step={50}
-              minStepsBetweenThumbs={1}
-              className="[&>span>span]:shadow-[0_0_12px_hsl(var(--primary)/0.55)]"
-            />
-          </div>
-        </div>
+        {kinds.length > 1 && (
+          <Section title="Tipo de hospedagem">
+            <div className="grid grid-cols-2 gap-2">
+              {kinds.map((t) => {
+                const active = !!filters.kind?.includes(t.id);
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    aria-pressed={active}
+                    onClick={() => toggle("kind", t.id)}
+                    className={cn(
+                      "flex min-h-[52px] items-center justify-between rounded-xl border px-4 text-left text-sm font-medium transition-colors",
+                      active ? "border-[#1f1f1f] bg-[#f7f7f7] ring-1 ring-[#1f1f1f]" : "border-[#dddddd] hover:border-[#1f1f1f]"
+                    )}
+                  >
+                    <span>{t.label}</span>
+                    <span className="text-xs text-muted-foreground">{t.n}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        )}
 
-        <Separator />
+        {amenities.length > 0 && (
+          <Section title="Comodidades">
+            <div className="flex flex-wrap gap-2">
+              {amenities.map((a) => {
+                const active = !!filters.serp_filter?.includes(a.id);
+                const Icon = active ? Check : a.icon;
+                return (
+                  <button key={a.id} type="button" aria-pressed={active} className={pill(active)} onClick={() => toggle("serp_filter", a.id)}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                    {a.label}
+                  </button>
+                );
+              })}
+            </div>
+          </Section>
+        )}
+      </div>
 
-        {/* Star Rating — multi-select */}
-        <div>
-          <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
-            <Star className="h-4 w-4 text-muted-foreground" />
-            Classificação por estrelas
-          </h4>
-          <div className="space-y-2">
-            {ratingOptions.map((option) => {
-              const isActive = (filters.star_rating || []).includes(option.value);
-              return (
-                <button
-                  key={option.value}
-                  onClick={() => toggleStarRating(option.value)}
-                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border ease-spring transition-all duration-300 ${
-                    isActive
-                      ? "border-primary bg-primary/10 text-primary scale-[1.02] shadow-sm shadow-primary/10"
-                      : "border-border hover:border-primary/50 hover:scale-[1.01]"
-                  }`}
-                >
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-sm">{option.label}</span>
-                  <span className="ml-auto text-xs text-muted-foreground">
-                    {"★".repeat(option.value)}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Property Type (kind) — multi-select */}
-        <div>
-          <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
-
-            Tipo de hospedagem
-          </h4>
-          <div className="space-y-2">
-            {propertyTypes.map((type) => (
-              <div key={type.id} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`kind-${type.id}`}
-                  checked={(filters.kind || []).includes(type.id)}
-                  onCheckedChange={() => toggleKind(type.id)}
-                />
-                <Label htmlFor={`kind-${type.id}`} className="text-sm cursor-pointer">
-                  {type.label}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Amenities (serp_filter) */}
-        <div>
-          <h4 className="font-medium text-foreground mb-3 flex items-center gap-2">
-            Comodidades
-          </h4>
-          <div className="space-y-2">
-            {amenityFilters.map((amenity) => {
-              const Icon = amenity.icon;
-              return (
-                <div key={amenity.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`amenity-${amenity.id}`}
-                    checked={(filters.serp_filter || []).includes(amenity.id)}
-                    onCheckedChange={() => toggleSerpFilter(amenity.id)}
-                  />
-                  <Label htmlFor={`amenity-${amenity.id}`} className="text-sm cursor-pointer flex items-center gap-1.5">
-                    <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                    {amenity.label}
-                  </Label>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <Separator />
-
-        {/* Action Buttons */}
-        <div className="space-y-2">
-          <Button onClick={handleApply} className="w-full relative">
-            Aplicar filtros
-          </Button>
-          <Button
-            variant="outline"
-            onClick={handleClearFilters}
-            className="w-full"
-          >
-            Limpar filtros
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
+      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-[#ebebeb] px-5 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] md:px-6">
+        <button
+          type="button"
+          onClick={clearAll}
+          disabled={!hasAny}
+          className="h-12 px-1 text-[15px] font-semibold underline underline-offset-2 disabled:text-muted-foreground disabled:no-underline"
+        >
+          Limpar
+        </button>
+        <button
+          type="button"
+          onClick={onDone}
+          disabled={resultCount === 0}
+          className="h-12 flex-1 max-w-[260px] rounded-xl bg-primary px-5 text-[15px] font-semibold text-primary-foreground disabled:opacity-50"
+        >
+          {resultCount === 0
+            ? "Nenhuma hospedagem"
+            : `Mostrar ${resultCount} ${resultCount === 1 ? "hospedagem" : "hospedagens"}`}
+        </button>
+      </div>
+    </div>
   );
 };
 

@@ -8,7 +8,7 @@ import HomeBottomNav from "@/components/home/HomeBottomNav";
 import { HOME_CONTAINER } from "@/components/home/layout";
 import HotelSearchBar from "@/components/hospedagem/HotelSearchBar";
 import type { RoomGuests } from "@/components/hospedagem/HotelSearchBar";
-import HotelFilters from "@/components/hospedagem/HotelFilters";
+import HotelFilters, { hotelHasAmenity, nightlyPrice } from "@/components/hospedagem/HotelFilters";
 import { type SortMode, sortHotels } from "@/components/hospedagem/MobileFilterChips";
 import SearchLoadingState from "@/components/hospedagem/SearchLoadingState";
 import HotelResultCard from "@/components/hospedagem/redesign/HotelResultCard";
@@ -35,6 +35,7 @@ export interface HotelFilters {
   price_from?: number;
   price_to?: number;
   serp_filter?: string[];
+  free_cancellation?: boolean;
 }
 
 export interface Hotel {
@@ -246,7 +247,9 @@ const Hospedagem = () => {
       checkOut: formatDateForApi(departure),
       rooms: safeRooms,
       residency,
-      filters,
+      // Filtros são aplicados aqui no navegador sobre o resultado da busca: mudar um filtro
+      // não gera nova consulta à RateHawk (limite de 10 buscas/min por região).
+      filters: {},
       testMode: isTestMode
     });
     // Scroll to results section after triggering the search
@@ -277,31 +280,18 @@ const Hospedagem = () => {
   const filteredHotels = useMemo(() => {
     if (hotels.length === 0) return hotels;
 
-    // Map serp_filter ids → keywords found in hotel.amenities (PT/EN)
-    const amenityKeywords: Record<string, string[]> = {
-      has_breakfast: ['café da manhã', 'breakfast'],
-      has_internet: ['wi-fi', 'wifi', 'internet'],
-      has_parking: ['estacionamento', 'parking'],
-      air_conditioning: ['ar-condicionado', 'ar condicionado', 'air condition'],
-    };
-
     const filtered = hotels.filter((hotel) => {
-      if (filters.price_from != null && hotel.price < filters.price_from) return false;
-      if (filters.price_to != null && hotel.price > filters.price_to) return false;
+      // Preço por noite (o mesmo valor exibido nos cards)
+      if (filters.price_from != null && nightlyPrice(hotel) < filters.price_from) return false;
+      if (filters.price_to != null && nightlyPrice(hotel) > filters.price_to) return false;
+      if (filters.free_cancellation && !hotel.freeCancellation) return false;
       if (filters.star_rating?.length) {
         if (!filters.star_rating.includes(Math.floor(hotel.rating))) return false;
       }
       if (filters.kind?.length) {
         if (!filters.kind.some((k) => hotel.propertyType?.toLowerCase().includes(k.toLowerCase()))) return false;
       }
-      if (filters.serp_filter?.length) {
-        const amenitiesLower = (hotel.amenities || []).map((a) => String(a).toLowerCase());
-        const matchesAll = filters.serp_filter.every((id) => {
-          const keywords = amenityKeywords[id] || [];
-          return keywords.some((kw) => amenitiesLower.some((a) => a.includes(kw)));
-        });
-        if (!matchesAll) return false;
-      }
+      if (filters.serp_filter?.length && !filters.serp_filter.every((id) => hotelHasAmenity(hotel, id))) return false;
       return true;
     });
     const normalize = (v: string) =>
@@ -333,6 +323,7 @@ const Hospedagem = () => {
     (filters.star_rating?.length || 0) +
     (filters.kind?.length || 0) +
     (filters.serp_filter?.length || 0) +
+    (filters.free_cancellation ? 1 : 0) +
     (filters.price_from != null || filters.price_to != null ? 1 : 0) +
     (sortMode !== "default" ? 1 : 0);
 
@@ -666,26 +657,19 @@ const Hospedagem = () => {
           <SheetContent
             side={isMobile ? "bottom" : "right"}
             className={isMobile ?
-            "h-[85vh] rounded-t-2xl flex flex-col p-4 overflow-hidden font-jakarta" :
-            "w-full sm:max-w-md flex flex-col p-4 overflow-hidden font-jakarta"}>
-            <SheetHeader className="shrink-0">
-              <SheetTitle className="sr-only">Filtros</SheetTitle>
+            "h-[88dvh] rounded-t-3xl flex flex-col p-0 pt-5 gap-0 overflow-hidden font-jakarta" :
+            "w-full sm:max-w-[440px] flex flex-col p-0 pt-6 gap-0 overflow-hidden font-jakarta"}>
+            <SheetHeader className="sr-only">
+              <SheetTitle>Filtros</SheetTitle>
             </SheetHeader>
-            <div
-              className="flex-1 min-h-0 overflow-y-auto overscroll-contain mt-4 pb-8"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-            >
-              <HotelFilters
-                filters={filters}
-                onFilterChange={handleFilterChange}
-                sortMode={sortMode}
-                onSortChange={setSortMode}
-                onApplyFilters={() => {
-                  handleSearch();
-                  setShowMobileFilters(false);
-                }} />
-
-            </div>
+            <HotelFilters
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              hotels={hotels}
+              resultCount={filteredHotels.length}
+              sortMode={sortMode}
+              onSortChange={setSortMode}
+              onDone={() => setShowMobileFilters(false)} />
           </SheetContent>
         </Sheet>
 
