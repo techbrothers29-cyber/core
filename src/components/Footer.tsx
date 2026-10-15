@@ -228,6 +228,7 @@ const Footer = () => {
                   </span>
                 </a>
               </li>
+              {!isHome && (
               <li className="flex items-center gap-3 min-h-[44px]">
                 <span className="w-10 h-10 shrink-0 rounded-xl bg-[#f2f2f2] text-[#5c5c5c] flex items-center justify-center">
                   <MapPin className="w-5 h-5" aria-hidden="true" />
@@ -237,6 +238,7 @@ const Footer = () => {
                   <b className="text-sm font-semibold">Serra Gaúcha, RS</b>
                 </span>
               </li>
+              )}
             </ul>
           </div>
         </div>
