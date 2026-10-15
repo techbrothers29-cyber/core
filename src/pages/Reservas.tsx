@@ -59,8 +59,8 @@ const HOTEL_STATUS: Record<string, { label: string; tone: Tone }> = {
 
 const voucherStatus = (status: string, expiresAt?: string | null): { label: string; tone: Tone } => {
   if (status === "used") return { label: "Utilizado", tone: "done" };
+  if (status === "cancelled" || status === "canceled") return { label: "Cancelado", tone: "off" };
   if (status === "expired" || (expiresAt && new Date(expiresAt) < new Date())) return { label: "Expirado", tone: "off" };
-  if (status === "cancelled") return { label: "Cancelado", tone: "off" };
   return { label: "Ativo", tone: "ok" };
 };
 
