@@ -3,7 +3,7 @@ import EstablishmentCard from "@/components/EstablishmentCard";
 import EstablishmentCardCompact from "@/components/EstablishmentCardCompact";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
-import { Ticket } from "lucide-react";
+import HomeSectionHeading from "@/components/home/HomeSectionHeading";
 import { useCarouselTouchPause } from "@/hooks/useCarouselTouchPause";
 import { CarouselSkeletonLoader } from "@/components/ui/offer-skeleton";
 import { useNovaxsEstablishments } from "@/hooks/useNovaxsEstablishments";
@@ -56,20 +56,13 @@ const FeaturedSection = memo(() => {
   if (entertainmentEstablishments.length === 0) return null;
 
   return (
-    <section className="py-3 relative overflow-hidden" aria-labelledby="entertainment-heading">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-center mb-3 md:hidden">
-          <h2 id="entertainment-heading" className="text-lg font-bold text-foreground flex items-center gap-2">
-            <Ticket className="h-5 w-5 text-primary" />
-            Entretenimento
-          </h2>
-        </div>
-        <div className="hidden md:block text-center mb-4">
-          <h2 className="text-xl md:text-2xl font-bold text-primary flex items-center justify-center gap-2">
-            <Ticket className="h-6 w-6" />
-            Parques, Atrações e Passeios
-          </h2>
-        </div>
+    <section className="pt-6 md:pt-9 pb-3 relative overflow-hidden" aria-labelledby="entertainment-heading">
+      <div className="container mx-auto px-5 md:px-8">
+        <HomeSectionHeading
+          id="entertainment-heading"
+          title="Parques, atrações e passeios"
+          to="/entretenimento"
+        />
 
         <div className="md:hidden">
           <Carousel className="w-full" opts={{ align: "start", loop: true, dragFree: true }} setApi={setMobileApi}>

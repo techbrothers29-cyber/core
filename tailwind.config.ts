@@ -21,6 +21,9 @@ export default {
       '2xl': '1536px',
     },
     extend: {
+      fontFamily: {
+        jakarta: ['"Plus Jakarta Sans"', "ui-sans-serif", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

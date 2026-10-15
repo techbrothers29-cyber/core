@@ -4,7 +4,7 @@ import OfferProductCardCompact from "@/components/OfferProductCardCompact";
 import PromotionalBanner from "@/components/PromotionalBanner";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
-import { Tag } from "lucide-react";
+import HomeSectionHeading from "@/components/home/HomeSectionHeading";
 import { useQuery } from "@tanstack/react-query";
 import { useCarouselTouchPause } from "@/hooks/useCarouselTouchPause";
 import { CarouselSkeletonLoader } from "@/components/ui/offer-skeleton";
@@ -97,31 +97,19 @@ const TertiaryFeaturedSection = memo(() => {
   if (offers.length === 0) return null;
 
   return (
-    <section className="pt-1 pb-6 relative overflow-hidden" aria-labelledby="offers-heading">
-      <div className="container mx-auto px-4">
+    <section className="pt-6 md:pt-9 pb-6 relative overflow-hidden" aria-labelledby="offers-heading">
+      <div className="container mx-auto px-5 md:px-8">
         {banner ? (
           <div className="mb-1">
             <PromotionalBanner imageUrl={banner.image_url} title={banner.title} />
           </div>
         ) : (
-          <>
-            <div className="flex items-center justify-between mb-3 md:hidden">
-              <h2 id="offers-heading" className="text-lg font-bold text-foreground flex items-center gap-2">
-                <Tag className="h-5 w-5 text-primary" />
-                Ofertas
-              </h2>
-              <span className="text-xs text-muted-foreground">{offers.length} ofertas</span>
-            </div>
-            <div className="hidden md:block text-center mb-4">
-              <h2 className="text-xl md:text-2xl font-bold text-primary flex items-center justify-center gap-2">
-                <Tag className="h-6 w-6" />
-                Ofertas e Descontos
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                {offers.length} produtos com desconto ou meia-entrada
-              </p>
-            </div>
-          </>
+          <HomeSectionHeading
+            id="offers-heading"
+            title="Ofertas e descontos"
+            mobileTitle="Ofertas"
+            aside={`${offers.length} produtos com desconto ou meia-entrada`}
+          />
         )}
 
         <div className="md:hidden">

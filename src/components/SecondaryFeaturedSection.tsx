@@ -4,7 +4,7 @@ import EstablishmentCardCompact from "@/components/EstablishmentCardCompact";
 import PromotionalBanner from "@/components/PromotionalBanner";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { type CarouselApi } from "@/components/ui/carousel";
-import { UtensilsCrossed } from "lucide-react";
+import HomeSectionHeading from "@/components/home/HomeSectionHeading";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useCarouselTouchPause } from "@/hooks/useCarouselTouchPause";
@@ -80,24 +80,13 @@ const SecondaryFeaturedSection = memo(() => {
   if (restaurantEstablishments.length === 0) return null;
 
   return (
-    <section className="pt-1 pb-6 relative overflow-hidden bg-muted/30" aria-labelledby="restaurants-heading">
-      <div className="container mx-auto px-4">
+    <section className="pt-6 md:pt-9 pb-3 relative overflow-hidden" aria-labelledby="restaurants-heading">
+      <div className="container mx-auto px-5 md:px-8">
         {banner && (
           <PromotionalBanner imageUrl={banner.image_url} title={banner.title} />
         )}
 
-        <div className="flex items-center justify-center mb-3 md:hidden">
-          <h2 id="restaurants-heading" className="text-lg font-bold text-foreground flex items-center gap-2">
-            <UtensilsCrossed className="h-5 w-5 text-primary" />
-            Gastronomia
-          </h2>
-        </div>
-        <div className="hidden md:block text-center mb-4">
-          <h2 className="text-xl md:text-2xl font-bold text-primary flex items-center justify-center gap-2">
-            <UtensilsCrossed className="h-6 w-6" />
-            Gastronomia
-          </h2>
-        </div>
+        <HomeSectionHeading id="restaurants-heading" title="Gastronomia" to="/restaurantes" />
 
         <div className="md:hidden">
           <Carousel className="w-full" opts={{ align: "start", loop: true, dragFree: true }} setApi={setMobileApi}>

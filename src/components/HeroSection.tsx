@@ -210,14 +210,14 @@ const HeroSection = memo(() => {
   // Reserve hero space even while loading to prevent layout shift (CLS).
   if (slides.length === 0) {
     return (
-      <section className="mx-4 mt-6 relative overflow-hidden" aria-label="Ofertas em destaque">
-        <div className="w-full max-w-[1600px] mx-auto h-[160px] md:h-[250px] rounded-xl bg-muted animate-pulse" />
+      <section className="mx-5 md:mx-8 mt-5 md:mt-7 relative overflow-hidden" aria-label="Ofertas em destaque">
+        <div className="w-full max-w-[1600px] mx-auto h-[160px] md:h-[250px] rounded-2xl bg-muted animate-pulse" />
       </section>
     );
   }
 
   return (
-    <section className="mx-4 mt-6 relative overflow-hidden" aria-label="Ofertas em destaque">
+    <section className="mx-5 md:mx-8 mt-5 md:mt-7 relative overflow-hidden" aria-label="Ofertas em destaque">
       <Carousel
         className="w-full max-w-[1600px] mx-auto select-none"
         opts={{ align: "start", loop: true, dragFree: false, watchDrag: true, skipSnaps: false }}
@@ -235,7 +235,7 @@ const HeroSection = memo(() => {
             const desktopSrc = optimizedImage(slide.desktop_image_url || slide.image_url, 1600, 80, "contain");
             return (
               <CarouselItem key={slide.id || index} className="pl-0">
-                <article className="relative h-[160px] md:h-[250px] overflow-hidden rounded-xl shadow-[var(--shadow-card)] select-none" itemScope itemType="https://schema.org/Offer">
+                <article className="relative h-[160px] md:h-[250px] overflow-hidden rounded-2xl select-none" itemScope itemType="https://schema.org/Offer">
                   <div className="absolute inset-0">
                     <picture>
                       <source media="(max-width: 767px)" srcSet={mobileSrc} />

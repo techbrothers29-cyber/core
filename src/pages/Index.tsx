@@ -4,6 +4,9 @@ import HeroSection from "@/components/HeroSection";
 import SEOHead from "@/components/SEOHead";
 import { jsonLdOrganization, jsonLdWebsite } from "@/lib/seo";
 import FeaturedSection from "@/components/FeaturedSection";
+import HomeSearchHero from "@/components/home/HomeSearchHero";
+import HomeCategoryTabs from "@/components/home/HomeCategoryTabs";
+import HomeSignupStrip from "@/components/home/HomeSignupStrip";
 import Footer from "@/components/Footer";
 import { CarouselSkeletonLoader } from "@/components/ui/offer-skeleton";
 import { prefetchEstabelecimento } from "@/lib/route-prefetch";
@@ -59,7 +62,7 @@ const Index = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background font-jakarta">
       <SEOHead
         title="Bah Ofertas — Hotéis, Restaurantes e Passeios na Serra Gaúcha"
         description="Reserve hotéis em Gramado e Canela, descontos em restaurantes, parques e passeios na Serra Gaúcha. Cupons e ofertas exclusivas com até 70% OFF no Bah Ofertas."
@@ -71,22 +74,21 @@ const Index = () => {
         jsonLd={[jsonLdOrganization(), jsonLdWebsite()]}
       />
       <main role="main">
-
+        <HomeSearchHero />
+        <HomeCategoryTabs />
+        <HomeSignupStrip />
         <HeroSection />
-        <section aria-labelledby="featured-heading">
-          <h2 id="featured-heading" className="sr-only">Ofertas em destaque</h2>
+        <section aria-label="Ofertas em destaque">
           <FeaturedSection />
         </section>
         {showDeferredSections && (
           <>
-            <section aria-labelledby="secondary-featured-heading">
-              <h2 id="secondary-featured-heading" className="sr-only">Mais ofertas exclusivas</h2>
+            <section aria-label="Gastronomia">
               <Suspense fallback={<SectionSkeleton />}>
                 <SecondaryFeaturedSection />
               </Suspense>
             </section>
-            <section aria-labelledby="tertiary-featured-heading">
-              <h2 id="tertiary-featured-heading" className="sr-only">Ofertas selecionadas</h2>
+            <section aria-label="Ofertas e descontos">
               <Suspense fallback={<SectionSkeleton />}>
                 <TertiaryFeaturedSection />
               </Suspense>
