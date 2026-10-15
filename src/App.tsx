@@ -1,4 +1,5 @@
 import React, { lazy, Suspense } from "react";
+import AppErrorBoundary from "@/components/system/AppErrorBoundary";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -123,6 +124,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ProfileCompletionGuard>
+              <AppErrorBoundary>
               <Suspense fallback={<LazyFallback />}>
                 <Routes>
                   <Route element={<PublicHeaderLayout />}>
@@ -252,6 +254,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              </AppErrorBoundary>
             </ProfileCompletionGuard>
             <RouteNoIndex />
             <ReferralTracker />
