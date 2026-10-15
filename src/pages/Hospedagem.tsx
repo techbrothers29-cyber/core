@@ -349,6 +349,15 @@ const Hospedagem = () => {
         : "Datas";
 
   const mapAvailable = hotels.length > 0 && hasMapResults && HAS_MAPBOX;
+
+  // Baixa o mapa (≈400 KB) em segundo plano assim que há resultados, para o botão "Mapa" abrir na hora.
+  useEffect(() => {
+    if (!mapAvailable) return;
+    const load = () => void import("@/components/hospedagem/HotelMap");
+    const idle = (window as any).requestIdleCallback as ((cb: () => void) => number) | undefined;
+    if (idle) idle(load);
+    else setTimeout(load, 1500);
+  }, [mapAvailable]);
   const desktopMapVisible = !isMobile && showMap && mapAvailable;
   const mobileMapVisible = isMobile && mobileView === "map" && mapAvailable && !isLoading;
   const showMobileInlineSearch = hotels.length === 0 && !isLoading;
