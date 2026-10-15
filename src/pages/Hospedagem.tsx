@@ -231,6 +231,7 @@ const Hospedagem = () => {
     setHotelNameSearch("");
     // Start downloading the map while the hotel search is in flight.
     void import("@/components/hospedagem/HotelMap");
+    void import("mapbox-gl");
     // Use the same visible dates for search and availability. Without dates,
     // the server picks defaults but the detail panel cannot request rooms.
     const arrival = checkIn || new Date();
@@ -353,7 +354,11 @@ const Hospedagem = () => {
   // Baixa o mapa (≈400 KB) em segundo plano assim que há resultados, para o botão "Mapa" abrir na hora.
   useEffect(() => {
     if (!mapAvailable) return;
-    const load = () => void import("@/components/hospedagem/HotelMap");
+    // react-map-gl só busca o mapbox-gl (o arquivo grande) ao montar o mapa, então pré-carregamos os dois.
+    const load = () => {
+      void import("@/components/hospedagem/HotelMap");
+      void import("mapbox-gl");
+    };
     const idle = (window as any).requestIdleCallback as ((cb: () => void) => number) | undefined;
     if (idle) idle(load);
     else setTimeout(load, 1500);
