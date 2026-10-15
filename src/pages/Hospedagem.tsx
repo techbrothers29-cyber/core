@@ -167,7 +167,7 @@ const Hospedagem = () => {
           let tries = 0;
           const restore = () => {
             if (document.documentElement.scrollHeight >= y + window.innerHeight * 0.5 || tries++ > 20) {
-              window.scrollTo({ top: y, behavior: "auto" });
+              window.scrollTo({ top: y, behavior: "instant" as ScrollBehavior });
             } else {
               window.setTimeout(restore, 50);
             }
