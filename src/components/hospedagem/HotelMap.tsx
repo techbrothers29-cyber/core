@@ -250,9 +250,6 @@ const HotelMap = ({
         style={{ touchAction: 'none', WebkitUserSelect: 'none', WebkitTouchCallout: 'none' }}
         data-map-gesture-zone="true"
       >
-        {!isReady && (
-          <div className="absolute inset-0 z-10 animate-pulse bg-gradient-to-br from-muted/60 via-muted/30 to-muted/60" />
-        )}
         <div
           className="absolute inset-0"
         >
