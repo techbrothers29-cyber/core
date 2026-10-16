@@ -117,7 +117,10 @@ const Hospedagem = () => {
 
   const isTestMode = searchParams.get('test') === 'true';
 
-  const [destination, setDestination] = useState<string>("gramado");
+  // "Ver todos" da Home abre direto no destino (?destination=porto-alegre, por exemplo).
+  const destinationParam = searchParams.get("destination");
+  const paramDestination = HOTEL_DESTINATIONS.some((d) => d.value === destinationParam) ? destinationParam : null;
+  const [destination, setDestination] = useState<string>(paramDestination || "gramado");
   const [checkIn, setCheckIn] = useState<Date | undefined>();
   const [checkOut, setCheckOut] = useState<Date | undefined>();
   const [rooms, setRooms] = useState<RoomGuests[]>([{ adults: 2, children: [] }]);
@@ -143,7 +146,9 @@ const Hospedagem = () => {
     // Voltando do checkout: reabre a página do hotel (não mais o pop-up).
     const reopenHotel = navState?.hotel ? navState.hotel as Hotel : null;
 
-    const source = navState?.searchResults ? navState : loadSearchState();
+    const saved = navState?.searchResults ? navState : loadSearchState();
+    // Busca salva de outro destino não vale quando a página foi aberta para um destino específico.
+    const source = paramDestination && !navState?.searchResults && saved?.destination !== paramDestination ? null : saved;
     if (source?.searchResults?.length) {
       const realSearchResults = source.searchResults.filter(isRealAvailableHotel);
       if (realSearchResults.length !== source.searchResults.length) {
