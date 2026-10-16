@@ -223,3 +223,23 @@ export function translateAmenityGroup(raw: string): string {
   const key = raw.trim().toLowerCase();
   return GROUP_MAP[key] || titleCasePt(raw.trim());
 }
+
+/**
+ * Comodidades do hotel em lista simples e traduzida. Aceita os dois formatos salvos:
+ * lista de textos ou amenity_groups da RateHawk ({ group_name, amenities, non_free_amenities }).
+ */
+export function flattenAmenities(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  const out: string[] = [];
+  for (const item of raw) {
+    if (typeof item === "string") out.push(translateAmenity(item));
+    else if (item && Array.isArray((item as any).amenities)) {
+      const paid = new Set<string>(((item as any).non_free_amenities || []).map(String));
+      for (const a of (item as any).amenities) {
+        if (typeof a !== "string") continue;
+        out.push(translateAmenity(a) + (paid.has(a) ? " (pago à parte)" : ""));
+      }
+    }
+  }
+  return [...new Set(out.filter(Boolean))];
+}

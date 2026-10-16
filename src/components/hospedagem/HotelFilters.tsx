@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { flattenAmenities } from "@/lib/amenity-translate";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Star, Wifi, Car, Snowflake, Check } from "lucide-react";
@@ -60,7 +61,7 @@ export const nightlyPrice = (h: Hotel) => Number(h.pricePerNight || h.price || 0
 export const hotelHasAmenity = (h: Hotel, id: string) => {
   const keywords = HOTEL_AMENITY_KEYWORDS[id];
   if (!keywords) return true; // filtro antigo/desconhecido (ex.: has_breakfast salvo) não esconde hotéis
-  const list = (h.amenities || []).map((a) => String(a).toLowerCase());
+  const list = flattenAmenities(h.amenities).map((a) => a.toLowerCase());
   return keywords.some((kw) => list.some((a) => a.includes(kw)));
 };
 

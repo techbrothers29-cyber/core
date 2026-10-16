@@ -25,7 +25,7 @@ import SEOHead from "@/components/SEOHead";
 import { buildHotelSeo, jsonLdHotel, jsonLdBreadcrumb, slugify, absoluteUrl } from "@/lib/seo";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import SocketIcon from "./SocketIcon";
-import { translateAmenity, translateAmenityGroup } from "@/lib/amenity-translate";
+import { translateAmenity, translateAmenityGroup, flattenAmenities } from "@/lib/amenity-translate";
 import { useNearbyAirports } from "@/hooks/useNearbyAirports";
 
 const DESC_TITLE_MAP: Record<string, string> = {
@@ -552,7 +552,7 @@ const HotelDetailModal = ({ hotel, checkIn, checkOut, adults, children = [], roo
                   Array.isArray(hotelDetails?.amenity_groups) && hotelDetails.amenity_groups.length > 0
                     ? hotelDetails.amenity_groups
                     : (hotelDetails?.amenities?.length
-                        ? [{ group_name: 'general', amenities: hotelDetails.amenities }]
+                        ? [{ group_name: 'general', amenities: flattenAmenities(hotelDetails.amenities) }]
                         : []);
                 if (groups.length === 0) return null;
                 const iconFor = (name: string) => {

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { flattenAmenities } from "@/lib/amenity-translate";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, Heart, Share, Wifi, Car, Coffee } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
@@ -210,7 +211,7 @@ const HotelDetalhe: React.FC = () => {
   const reserveHref = `/hospedagem?destination=${encodeURIComponent((city || "gramado").toLowerCase())}`;
   const address = hotel.address || city;
   const cityHotelsPath = `/hoteis-em-${slugify(city)}`;
-  const amenities: string[] = Array.isArray(hotel.amenities) ? (hotel.amenities as any[]).map(String) : [];
+  const amenities: string[] = flattenAmenities(hotel.amenities);
   const hotelFaq = buildHotelFaq({
     name: hotel.name,
     city,
