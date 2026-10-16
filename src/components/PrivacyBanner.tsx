@@ -1,26 +1,21 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Cookie } from "lucide-react";
+import { ALL_ON, CONSENT_EVENT, ONLY_NECESSARY, getConsent, saveConsent } from "@/lib/consent";
 
 const PrivacyBanner = () => {
   const [isVisible, setIsVisible] = useState(false);
+  const { pathname } = useLocation();
 
   useEffect(() => {
-    try {
-      if (!localStorage.getItem("privacy-policy-accepted")) setIsVisible(true);
-    } catch {
-      setIsVisible(true);
-    }
+    setIsVisible(!getConsent());
+    const hide = () => setIsVisible(false);
+    window.addEventListener(CONSENT_EVENT, hide);
+    return () => window.removeEventListener(CONSENT_EVENT, hide);
   }, []);
 
-  const handleAccept = () => {
-    try {
-      localStorage.setItem("privacy-policy-accepted", "true");
-    } catch {}
-    setIsVisible(false);
-  };
-
-  if (!isVisible) return null;
+  // Na própria tela de configurações o aviso só atrapalharia.
+  if (!isVisible || pathname === "/cookies-config") return null;
 
   return (
     // Celular: cartão flutuante acima da barra de navegação inferior (64px + área segura do iPhone).
@@ -37,26 +32,30 @@ const PrivacyBanner = () => {
             <Cookie className="w-5 h-5" aria-hidden="true" />
           </span>
           <p className="m-0 text-[13px] md:text-sm leading-relaxed text-foreground">
-            Usamos cookies para melhorar o desempenho e a segurança do site e personalizar conteúdo e anúncios. Saiba mais na nossa{" "}
+            Usamos cookies para o site funcionar e, com a sua permissão, para medir visitas e mostrar anúncios relevantes.{" "}
+            <Link to="/cookies-config" className="font-semibold underline underline-offset-2">
+              Personalizar
+            </Link>{" "}
+            ·{" "}
             <Link to="/privacidade" className="font-semibold underline underline-offset-2">
-              Política de Privacidade
+              Privacidade
             </Link>
-            .
           </p>
         </div>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <Link
-            to="/cookies-config"
-            className="h-11 inline-flex items-center justify-center rounded-xl border border-[#dddddd] text-sm font-semibold text-foreground hover:bg-[#f7f7f7]"
-          >
-            Configurar
-          </Link>
           <button
             type="button"
-            onClick={handleAccept}
+            onClick={() => saveConsent(ONLY_NECESSARY)}
+            className="h-11 inline-flex items-center justify-center rounded-xl border border-[#dddddd] text-sm font-semibold text-foreground hover:bg-[#f7f7f7]"
+          >
+            Só necessários
+          </button>
+          <button
+            type="button"
+            onClick={() => saveConsent(ALL_ON)}
             className="h-11 inline-flex items-center justify-center rounded-xl bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
-            Aceitar cookies
+            Aceitar todos
           </button>
         </div>
       </div>

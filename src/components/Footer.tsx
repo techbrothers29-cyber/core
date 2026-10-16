@@ -262,6 +262,9 @@ const Footer = () => {
             <Link to="/privacidade" className="inline-flex items-center min-h-[40px] md:min-h-0 hover:text-primary transition-colors">
               Política de Privacidade
             </Link>
+            <Link to="/cookies-config" className="inline-flex items-center min-h-[40px] md:min-h-0 hover:text-primary transition-colors">
+              Preferências de cookies
+            </Link>
           </nav>
         </div>
       </div>

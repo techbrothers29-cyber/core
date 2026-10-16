@@ -6,6 +6,24 @@
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      // Consentimento (LGPD / Google Consent Mode v2): opcionais começam negados e a escolha salva
+      // em "Configurações de Cookies" é reaplicada antes de qualquer medição.
+      gtag('consent', 'default', {
+        ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied',
+        analytics_storage: 'denied', functionality_storage: 'denied', personalization_storage: 'denied',
+        security_storage: 'granted', wait_for_update: 500
+      });
+      try {
+        var cp = JSON.parse(localStorage.getItem('cookie-preferences') || 'null');
+        if (!cp && localStorage.getItem('privacy-policy-accepted') === 'true') cp = { functional: true, analytics: true, advertising: true };
+        if (cp) {
+          var g = function (on) { return on ? 'granted' : 'denied'; };
+          gtag('consent', 'update', {
+            analytics_storage: g(cp.analytics), ad_storage: g(cp.advertising), ad_user_data: g(cp.advertising),
+            ad_personalization: g(cp.advertising), functionality_storage: g(cp.functional), personalization_storage: g(cp.functional)
+          });
+        }
+      } catch (e) {}
       gtag('js', new Date());
       gtag('config', 'AW-18172971010');
     </script>
