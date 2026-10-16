@@ -16,6 +16,8 @@ export interface HomePlaceCardProps {
   /** Selo no canto da foto, só no desktop (ex.: "Entretenimento", "-50%"). */
   tag?: string;
   tagTone?: "neutral" | "brand";
+  /** Texto quando não há preço (padrão "Ver ofertas"). */
+  emptyPriceLabel?: string;
   /** Preço atual já formatado; vazio = "Ver ofertas". */
   price?: string;
   /** Preço antigo formatado (riscado). */
@@ -38,7 +40,7 @@ const formatRating = (r: number) => r.toFixed(1).replace(".", ",");
  */
 const HomePlaceCard = memo((props: HomePlaceCardProps) => {
   const {
-    favKey, title, image, path, rating, subtitle, tag, tagTone = "neutral",
+    favKey, title, image, path, rating, subtitle, tag, tagTone = "neutral", emptyPriceLabel = "Ver ofertas",
     price, oldPrice, fromLabel = true, onPrefetch, forceCover, imageClassName,
   } = props;
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -56,7 +58,7 @@ const HomePlaceCard = memo((props: HomePlaceCardProps) => {
 
   let priceLine: ReactNode;
   if (!price) {
-    priceLine = <span className="font-semibold text-foreground">Ver ofertas</span>;
+    priceLine = <span className="font-semibold text-foreground">{emptyPriceLabel}</span>;
   } else if (oldPrice) {
     priceLine = (
       <>

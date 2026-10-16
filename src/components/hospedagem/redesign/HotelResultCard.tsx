@@ -1,3 +1,4 @@
+import { slugify } from "@/lib/seo";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import type { MouseEvent } from "react";
 import useEmblaCarousel from "embla-carousel-react";
@@ -132,7 +133,8 @@ const HotelResultCard = memo(({ hotel, onOpen, isBestPrice, priority }: HotelRes
       key: favKey,
       title: hotel.name,
       image: hotel.image && hotel.image !== "/placeholder.svg" ? toCardImageUrl(hotel.image) : undefined,
-      path: "/hospedagem",
+      // Página própria do hotel (funciona fora da busca, ex.: aberta pelos Favoritos)
+      path: `/hospedagem/hotel/${encodeURIComponent(hotel.id)}/${slugify(hotel.name || "hotel")}`,
       subtitle: hotel.location,
       rating: hotel.rating > 0 ? hotel.rating : undefined,
     });

@@ -5,7 +5,17 @@ import Footer from "@/components/Footer";
 import HomePlaceCard from "@/components/home/HomePlaceCard";
 import HomeBottomNav from "@/components/home/HomeBottomNav";
 import { HOME_CONTAINER } from "@/components/home/layout";
-import { useFavorites } from "@/hooks/useFavorites";
+import { useFavorites, type FavoriteItem } from "@/hooks/useFavorites";
+import { slugify } from "@/lib/seo";
+
+/** Hotéis salvos antes apontavam para a busca (/hospedagem); leva direto à página do hotel. */
+const resolvePath = (item: FavoriteItem) => {
+  if (item.key.startsWith("hotel:") && (!item.path || item.path === "/hospedagem")) {
+    const id = item.key.slice("hotel:".length);
+    return `/hospedagem/hotel/${encodeURIComponent(id)}/${slugify(item.title || "hotel")}`;
+  }
+  return item.path || "/";
+};
 
 /** Lista de favoritos salvos neste aparelho (coração dos cards da Home). */
 const Favoritos = () => {
@@ -46,7 +56,8 @@ const Favoritos = () => {
                   favKey={item.key}
                   title={item.title}
                   image={item.image}
-                  path={item.path}
+                  path={resolvePath(item)}
+                  emptyPriceLabel={item.key.startsWith("hotel:") ? "Ver hospedagem" : undefined}
                   rating={item.rating}
                   subtitle={item.subtitle}
                   price={item.priceLabel?.replace(/^A partir de /, "")}
