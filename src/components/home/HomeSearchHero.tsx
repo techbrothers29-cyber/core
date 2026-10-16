@@ -110,7 +110,7 @@ const HomeSearchHero = () => {
         Para onde vamos?
       </h1>
       <p className="m-0 mt-1 md:mt-2 mb-4 md:mb-7 text-center text-[13px] md:text-base text-white/85">
-        Hotéis, parques e restaurantes com desconto no Sul do Brasil
+        Hotéis, parques e restaurantes com desconto<span className="hidden md:inline"> no Sul do Brasil</span>
       </p>
       {/* Desktop */}
       <div className="hidden md:block">
