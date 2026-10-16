@@ -9,6 +9,8 @@ import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import SearchResultsDropdown from "@/components/SearchResultsDropdown";
 import { useSelectedDate } from "@/components/GlobalDatePicker";
 import { HOME_CONTAINER } from "@/components/home/layout";
+import heroDesktop from "@/assets/home-hero.webp";
+import heroMobile from "@/assets/home-hero-mobile.webp";
 
 /**
  * Busca principal da Home ("Para onde vamos?").
@@ -91,14 +93,29 @@ const HomeSearchHero = () => {
   );
 
   return (
-    <section className={`${HOME_CONTAINER} pt-4 md:pt-10 pb-2 md:pb-6`} aria-label="Buscar no Bah Ofertas">
-      <h1 className="sr-only md:not-sr-only md:block md:text-center md:m-0 md:mb-6 md:text-[40px] md:leading-tight font-extrabold tracking-tight text-foreground">
+    <section className={`${HOME_CONTAINER} pt-3 md:pt-6 pb-2 md:pb-4`} aria-label="Buscar no Bah Ofertas">
+     {/* Fundo com foto da Serra numa camada própria: o bloco da busca não pode ter overflow-hidden,
+         senão a lista de resultados abaixo da pílula seria cortada. */}
+     <div className="relative rounded-3xl px-4 pt-6 pb-5 md:px-8 md:pt-14 md:pb-14">
+      <div className="absolute inset-0 rounded-3xl overflow-hidden bg-[#2a2a2a]" aria-hidden="true">
+        <picture>
+          <source media="(max-width: 767px)" srcSet={heroMobile} />
+          {/* @ts-expect-error fetchpriority ainda não está nos tipos do React */}
+          <img src={heroDesktop} alt="" fetchpriority="high" decoding="async" className="w-full h-full object-cover object-[center_60%]" />
+        </picture>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/35 to-black/55" />
+      </div>
+      <div className="relative">
+      <h1 className="m-0 text-center text-[26px] leading-tight md:text-[44px] font-extrabold tracking-tight text-white">
         Para onde vamos?
       </h1>
+      <p className="m-0 mt-1 md:mt-2 mb-4 md:mb-7 text-center text-[13px] md:text-base text-white/85">
+        Hotéis, parques e restaurantes com desconto no Sul do Brasil
+      </p>
       {/* Desktop */}
       <div className="hidden md:block">
         <div ref={desktopRef} className="relative max-w-[860px] mx-auto text-left">
-          <div className="flex items-center bg-card border border-[#dddddd] rounded-full shadow-[0_6px_20px_rgba(0,0,0,0.08)] p-1.5 pl-0">
+          <div className="flex items-center bg-card border border-[#dddddd] rounded-full shadow-[0_10px_30px_rgba(0,0,0,0.25)] p-1.5 pl-0">
             <label className="flex-[1.4] min-w-0 px-5 lg:px-7 py-2 rounded-full cursor-text hover:bg-muted/60 transition-colors">
               <span className="block text-xs font-extrabold text-foreground">Onde</span>
               <input
@@ -167,7 +184,7 @@ const HomeSearchHero = () => {
       <div ref={mobileRef} className="md:hidden">
         {/* Toda a pílula (exceto os botões) abre o teclado: antes só a linha do texto (20px) respondia ao toque. */}
         <div
-          className="flex items-center gap-3 h-14 bg-card border border-[#dddddd] rounded-full shadow-[0_3px_10px_rgba(0,0,0,0.08)] pl-5 pr-2 cursor-text"
+          className="flex items-center gap-3 h-14 bg-card border border-[#dddddd] rounded-full shadow-[0_8px_24px_rgba(0,0,0,0.25)] pl-5 pr-2 cursor-text"
           onClick={(e) => {
             if (!(e.target as HTMLElement).closest("button")) mobileInputRef.current?.focus();
           }}
@@ -224,6 +241,8 @@ const HomeSearchHero = () => {
           <BedDouble className="w-4 h-4" /> Buscar hospedagem com hóspedes
         </button>
       </div>
+      </div>
+     </div>
     </section>
   );
 };
