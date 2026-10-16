@@ -76,20 +76,20 @@ const HospedagemIdle = ({ destinationLabel, onPickDates }: Props) => {
         <p className="m-0 mt-1 text-sm text-muted-foreground">
           Escolha um atalho ou as datas acima para ver os preços em tempo real.
         </p>
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
           {shortcuts.map((s) => (
             <button
               key={s.label}
               type="button"
               onClick={() => onPickDates(s.from, s.to)}
-              className="flex items-center gap-3 rounded-2xl border border-[#ebebeb] bg-card p-4 text-left transition-colors hover:border-[#1f1f1f]"
+              className="flex items-center gap-3 rounded-2xl border border-[#ebebeb] bg-card p-3 sm:p-4 text-left transition-colors hover:border-[#1f1f1f]"
             >
-              <span className="w-11 h-11 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span className="hidden sm:flex w-11 h-11 shrink-0 rounded-xl bg-primary/10 text-primary items-center justify-center">
                 <CalendarDays className="w-5 h-5" aria-hidden="true" />
               </span>
               <span className="min-w-0">
-                <span className="block text-[15px] font-semibold">{s.label}</span>
-                <span className="block text-[13px] text-muted-foreground">
+                <span className="block text-[13px] sm:text-[15px] font-semibold leading-tight">{s.label}</span>
+                <span className="block mt-0.5 text-xs sm:text-[13px] text-muted-foreground">
                   {fmt(s.from)} – {fmt(s.to)}
                 </span>
               </span>
