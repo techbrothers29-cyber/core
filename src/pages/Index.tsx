@@ -84,20 +84,21 @@ const Index = () => {
         <HomeCategoryTabs />
         <HomeSignupStrip variant="desktop" />
         <HeroSection />
+        {/* Hotéis 4 estrelas logo após o banner */}
+        <HomeHotelsSection id="hotels-serra-heading" title="Hotéis 4 estrelas na Serra Gaúcha" mobileTitle="Hotéis na Serra Gaúcha" cities={SERRA} destination="gramado" />
+        <HomeHotelsSection id="hotels-sc-heading" title="Hotéis 4 estrelas em Santa Catarina" mobileTitle="Hotéis em Santa Catarina" cities={SC} destination="florianopolis" />
+        <HomeHotelsSection id="hotels-poa-heading" title="Hotéis 4 estrelas em Porto Alegre" mobileTitle="Hotéis em Porto Alegre" cities={POA} destination="porto-alegre" />
         {/* Cada seção já é um <section> com título próprio; sem embrulho extra (evita nomes duplicados para leitor de tela). */}
         <FeaturedSection />
         <HomeSignupStrip variant="mobile" />
         {showDeferredSections && (
           <>
-            <HomeHotelsSection id="hotels-serra-heading" title="Hotéis 4 estrelas na Serra Gaúcha" mobileTitle="Hotéis na Serra Gaúcha" cities={SERRA} destination="gramado" />
             <Suspense fallback={<SectionSkeleton />}>
               <SecondaryFeaturedSection />
             </Suspense>
-            <HomeHotelsSection id="hotels-sc-heading" title="Hotéis 4 estrelas em Santa Catarina" mobileTitle="Hotéis em Santa Catarina" cities={SC} destination="florianopolis" />
             <Suspense fallback={<SectionSkeleton />}>
               <TertiaryFeaturedSection />
             </Suspense>
-            <HomeHotelsSection id="hotels-poa-heading" title="Hotéis 4 estrelas em Porto Alegre" mobileTitle="Hotéis em Porto Alegre" cities={POA} destination="porto-alegre" />
             <section aria-labelledby="testimonials-heading">
               <h2 id="testimonials-heading" className="sr-only">Avaliações dos clientes</h2>
               <Suspense fallback={null}>
