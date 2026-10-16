@@ -10,7 +10,8 @@ type IdleHotel = { hid: string; name: string; address: string | null; star_ratin
 
 const photo = (images: unknown) => {
   const first = Array.isArray(images) ? String(images[0] || "") : "";
-  return first.includes("{size}") ? first.replace("{size}", "640x400") : first;
+  if (first.includes("{size}")) return first.replace("{size}", "640x400");
+  return first.replace(/\/t\/[^/]+\/content\//, "/t/640x400/content/");
 };
 
 const stripAccents = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
@@ -45,6 +46,7 @@ interface Props {
 const HospedagemIdle = ({ destinationLabel, onPickDates }: Props) => {
   const city = destinationLabel.split(",")[0].trim();
   const [hotels, setHotels] = useState<IdleHotel[] | null>(null);
+  const [broken, setBroken] = useState<Set<string>>(new Set());
   const shortcuts = useMemo(() => dateShortcuts(), []);
 
   useEffect(() => {
@@ -60,7 +62,7 @@ const HospedagemIdle = ({ destinationLabel, onPickDates }: Props) => {
       .limit(24)
       .then(({ data }) => {
         if (cancelled) return;
-        setHotels(((data as IdleHotel[]) || []).filter((h) => photo(h.images)).slice(0, 12));
+        setHotels(((data as IdleHotel[]) || []).filter((h) => photo(h.images)));
       });
     return () => {
       cancelled = true;
@@ -110,7 +112,7 @@ const HospedagemIdle = ({ destinationLabel, onPickDates }: Props) => {
           <h2 id="idle-hotels" className="m-0 text-lg md:text-xl font-bold">Hospedagens em {city}</h2>
           <p className="m-0 mt-1 text-sm text-muted-foreground">Veja fotos e detalhes. Os preços aparecem quando você escolher as datas.</p>
           <ul className="m-0 mt-4 p-0 list-none grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-6">
-            {hotels.map((h) => (
+            {hotels.filter((h) => !broken.has(h.hid)).slice(0, 12).map((h) => (
               <li key={h.hid} className="min-w-0">
                 <Link to={`/hospedagem/hotel/${encodeURIComponent(h.hid)}/${slugify(h.name)}`} className="group block">
                   <div className="aspect-[4/3] overflow-hidden rounded-2xl bg-muted">
@@ -118,6 +120,7 @@ const HospedagemIdle = ({ destinationLabel, onPickDates }: Props) => {
                       src={photo(h.images)}
                       alt=""
                       loading="lazy"
+                      onError={() => setBroken((b) => new Set(b).add(h.hid))}
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                     />
                   </div>
