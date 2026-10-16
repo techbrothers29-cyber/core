@@ -446,7 +446,7 @@ const HotelCheckout = () => {
     <aside className={`${sectionCls} lg:sticky lg:top-24`} aria-labelledby="hc-resumo">
       <h2 id="hc-resumo" className="m-0 text-[17px] font-bold">Resumo da reserva</h2>
       <div className="mt-4">
-        <p className="m-0 text-base font-bold leading-snug">{prebookData?.hotel_name || hotelName}</p>
+        <p className="m-0 text-base font-bold leading-snug">{hotelName || prebookData?.hotel_name}</p>
         {prebookData?.room_name && <p className="m-0 mt-0.5 text-sm text-muted-foreground">{prebookData.room_name}</p>}
       </div>
       <dl className="m-0 mt-4 space-y-3 border-t border-[#ebebeb] pt-4 text-sm">
