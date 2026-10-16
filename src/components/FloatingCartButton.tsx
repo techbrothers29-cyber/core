@@ -15,6 +15,7 @@ import { prefetchCheckout } from '@/lib/route-prefetch';
  */
 const HIDDEN_ROUTE_PREFIXES = [
   '/checkout',
+  '/cookies-config',
   '/admin',
   '/parceiro',
   '/afiliado',
