@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from "@/components/ui/carousel";
+import { useCarouselTouchPause } from "@/hooks/useCarouselTouchPause";
 import HomeSectionHeading from "@/components/home/HomeSectionHeading";
 import HomePlaceCard from "@/components/home/HomePlaceCard";
 import { HOME_CONTAINER } from "@/components/home/layout";
@@ -40,6 +41,11 @@ interface Props {
  */
 const HomeHotelsSection = memo(({ id, title, mobileTitle, cities, destination }: Props) => {
   const [hotels, setHotels] = useState<Row[] | null>(null);
+  const [mobileApi, setMobileApi] = useState<CarouselApi>();
+  const [desktopApi, setDesktopApi] = useState<CarouselApi>();
+  // Mesmo avanço automático dos demais carrosséis da Home (pausa ao tocar/arrastar).
+  useCarouselTouchPause({ api: mobileApi, interval: 3000 });
+  useCarouselTouchPause({ api: desktopApi, interval: 3000 });
 
   useEffect(() => {
     let cancelled = false;
@@ -91,7 +97,7 @@ const HomeHotelsSection = memo(({ id, title, mobileTitle, cities, destination }:
         <HomeSectionHeading id={id} title={title} mobileTitle={mobileTitle} to={`/hospedagem?destination=${destination}`} />
 
         <div className="md:hidden">
-          <Carousel className="w-full" opts={{ align: "start", dragFree: true }}>
+          <Carousel className="w-full" opts={{ align: "start", loop: true, dragFree: true }} setApi={setMobileApi}>
             <CarouselContent className="-ml-3">
               {hotels.map((h) => (
                 <CarouselItem key={h.hid} className="pl-3 basis-[45%]">
@@ -103,7 +109,7 @@ const HomeHotelsSection = memo(({ id, title, mobileTitle, cities, destination }:
         </div>
 
         <div className="hidden md:block">
-          <Carousel className="w-full max-w-[1600px] mx-auto" opts={{ align: "start", dragFree: true }}>
+          <Carousel className="w-full max-w-[1600px] mx-auto" opts={{ align: "start", loop: true, dragFree: true }} setApi={setDesktopApi}>
             <CarouselContent className="-ml-5">
               {hotels.map((h) => (
                 <CarouselItem key={h.hid} className="pl-5 md:basis-1/3 lg:basis-1/4 xl:basis-1/5">
