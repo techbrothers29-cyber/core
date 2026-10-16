@@ -15,6 +15,7 @@ import HotelResultCard from "@/components/hospedagem/redesign/HotelResultCard";
 import HotelFilterChips from "@/components/hospedagem/redesign/HotelFilterChips";
 import { useHotelSearch } from "@/hooks/useHotelSearch";
 import { HOTEL_DESTINATIONS } from "@/data/hotel-destinations";
+import HospedagemIdle from "@/components/hospedagem/HospedagemIdle";
 
 import { formatDateForApi } from "@/lib/date";
 import { useMemo } from "react";
@@ -259,17 +260,19 @@ const Hospedagem = () => {
 
   const resultsRef = useRef<HTMLElement | null>(null);
 
-  const handleSearch = () => {
+  const handleSearch = (fromOverride?: Date, toOverride?: Date) => {
+    const ci = fromOverride instanceof Date ? fromOverride : checkIn;
+    const co = toOverride instanceof Date ? toOverride : checkOut;
     setHotelNameSearch("");
     // Start downloading the map while the hotel search is in flight.
     void import("@/components/hospedagem/HotelMap");
     void import("mapbox-gl");
     // Use the same visible dates for search and availability. Without dates,
     // the server picks defaults but the detail panel cannot request rooms.
-    const arrival = checkIn || new Date();
-    if (!checkIn) arrival.setDate(arrival.getDate() + 1);
-    const departure = checkOut && checkOut > arrival ? checkOut : new Date(arrival);
-    if (!checkOut || checkOut <= arrival) departure.setDate(departure.getDate() + (checkIn ? 1 : 6));
+    const arrival = ci || new Date();
+    if (!ci) arrival.setDate(arrival.getDate() + 1);
+    const departure = co && co > arrival ? co : new Date(arrival);
+    if (!co || co <= arrival) departure.setDate(departure.getDate() + (ci ? 1 : 6));
     setCheckIn(arrival);
     setCheckOut(departure);
     search({
@@ -435,11 +438,10 @@ const Hospedagem = () => {
     }
     if (hotels.length === 0) {
       return (
-        <div className="py-10 md:py-16 text-center">
-          <p className="m-0 text-sm text-muted-foreground">
-            Escolha as datas e clique em <b className="font-semibold text-foreground">Buscar</b> para ver os preços em tempo real.
-          </p>
-        </div>
+        <HospedagemIdle
+          destinationLabel={selectedDestination.label}
+          onPickDates={(from, to) => handleSearch(from, to)}
+        />
       );
     }
     if (filteredHotels.length === 0) {
