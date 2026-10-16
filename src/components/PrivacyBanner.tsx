@@ -29,7 +29,7 @@ const PrivacyBanner = () => {
       role="dialog"
       aria-live="polite"
       aria-label="Aviso de cookies"
-      className="fixed z-[60] inset-x-3 bottom-[calc(64px+env(safe-area-inset-bottom)+12px)] md:inset-x-auto md:left-6 md:bottom-6 md:max-w-[440px] rounded-2xl border border-[#ebebeb] bg-card shadow-[0_12px_40px_rgba(0,0,0,0.18)] font-jakarta animate-in slide-in-from-bottom-4 fade-in duration-300"
+      className="fixed z-[60] inset-x-3 bottom-[calc(64px_+_env(safe-area-inset-bottom)_+_12px)] md:inset-x-auto md:left-6 md:bottom-6 md:max-w-[440px] rounded-2xl border border-[#ebebeb] bg-card shadow-[0_12px_40px_rgba(0,0,0,0.18)] font-jakarta animate-in slide-in-from-bottom-4 fade-in duration-300"
     >
       <div className="p-4 md:p-5">
         <div className="flex items-start gap-3">
