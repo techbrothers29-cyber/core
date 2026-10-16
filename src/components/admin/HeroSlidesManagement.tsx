@@ -213,13 +213,13 @@ const HeroSlidesManagement = () => {
               </h4>
               <ul className="text-xs text-muted-foreground space-y-1">
                 <li>
-                  <strong>🖥️ Desktop:</strong> 1600 × 500px (proporção 3.2:1) — usado em telas ≥ 768px
+                  <strong>🖥️ Desktop:</strong> 1600 × 250px (proporção 6.4:1, faixa larga) — usado em telas ≥ 768px. Deixe textos e botões a ~15% das bordas
                 </li>
                 <li>
-                  <strong>📱 Mobile:</strong> 716 × 320px (proporção ~2.24:1) — usado em telas &lt; 768px
+                  <strong>📱 Mobile:</strong> 716 × 320px (proporção ~2.24:1) — usado em telas &lt; 768px. A imagem é recortada nas bordas em celulares largos: mantenha textos e botões afastados das bordas
                 </li>
                 <li>
-                  <strong>🖼️ Principal (fallback):</strong> 1600 × 500px — usada quando Mobile/Desktop não são enviadas
+                  <strong>🖼️ Principal (fallback):</strong> 1600 × 250px — usada quando Mobile/Desktop não são enviadas
                 </li>
                 <li>Formato: JPG ou WebP otimizado • Máx. 5MB cada</li>
               </ul>
@@ -231,7 +231,7 @@ const HeroSlidesManagement = () => {
                 Imagem Principal (fallback) *
               </Label>
               <p className="text-xs text-muted-foreground">
-                Exibida quando não há versão específica. Recomendado: <strong>1600 × 500px</strong>
+                Exibida quando não há versão específica. Recomendado: <strong>1600 × 250px</strong>
               </p>
               <Input
                 type="file"
@@ -280,7 +280,7 @@ const HeroSlidesManagement = () => {
                   Imagem Desktop (opcional)
                 </Label>
                 <p className="text-xs text-muted-foreground">
-                  Recomendado: <strong>1600 × 500px</strong> (proporção 3.2:1)
+                  Recomendado: <strong>1600 × 250px</strong> (proporção 6.4:1)
                   <br />
                   Exibida em telas a partir de 768px
                 </p>
