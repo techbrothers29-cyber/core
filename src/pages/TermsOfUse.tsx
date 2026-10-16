@@ -351,7 +351,7 @@ const TermsOfUse = () => {
 
         <div className="mt-6 md:mt-8 grid gap-6 lg:grid-cols-[260px_minmax(0,1fr)] lg:gap-10 lg:items-start">
           {/* Índice */}
-          <nav aria-label="Índice dos termos" className="min-w-0">
+          <nav aria-label="Índice dos termos" className="min-w-0 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
             <details className="lg:hidden rounded-2xl border border-[#ebebeb] bg-card group">
               <summary className="flex items-center justify-between gap-3 cursor-pointer list-none px-4 h-12 text-[15px] font-semibold [&::-webkit-details-marker]:hidden">
                 Nesta página
@@ -359,7 +359,7 @@ const TermsOfUse = () => {
               </summary>
               <div className="px-2 pb-3">{Toc}</div>
             </details>
-            <div className="hidden lg:block sticky top-24 rounded-2xl border border-[#ebebeb] bg-card p-3">
+            <div className="hidden lg:block rounded-2xl border border-[#ebebeb] bg-card p-3">
               <p className="m-0 px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Nesta página</p>
               {Toc}
             </div>
